@@ -4,7 +4,9 @@ import { dirname, join } from "node:path";
 import { mkdirSync } from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dataDir = join(__dirname, "data");
+// DATA_DIR lets the host mount a persistent disk at a clean absolute path
+// (e.g. Render's disk at /var/data). Unset in local dev → <server>/data.
+const dataDir = process.env.DATA_DIR || join(__dirname, "data");
 mkdirSync(dataDir, { recursive: true });
 
 export const db = new Database(join(dataDir, "dukaan.db"));

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Store, ArrowLeft } from "lucide-react";
@@ -14,17 +14,49 @@ export default function LoginPage() {
   const [form, setForm] = useState({ whatsapp_number: "", pin: "", name: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showPin, setShowPin] = useState(false);
+  const [remember, setRemember] = useState(true);
 
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  // autosave key for partially-entered auth form
+  const AUTOSAVE_KEY = "dukaan_auth_form";
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || "null");
+      if (saved) setForm((f) => ({ ...f, ...saved }));
+    } catch {}
+  }, []);
+
+  const set = (k) => (e) => {
+    const v = e.target.value;
+    setForm((f) => {
+      const next = { ...f, [k]: v };
+      try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
     setBusy(true);
+    setFieldErrors({});
+    // client-side validation
+    const errs = {};
+    if (!form.whatsapp_number || form.whatsapp_number.trim().length < 5) errs.whatsapp_number = t("login.errors.numberRequired") || "Enter a valid phone number";
+    if (!form.pin || form.pin.trim().length < 4) errs.pin = t("login.errors.pinShort") || "PIN must be at least 4 digits";
+    if (mode === "register" && (!form.name || form.name.trim().length < 2)) errs.name = t("login.errors.nameRequired") || "Enter a shop name";
+    if (Object.keys(errs).length) {
+      setFieldErrors(errs);
+      setBusy(false);
+      return;
+    }
     try {
       const payload = { ...form, lang: i18n.resolvedLanguage?.slice(0, 2) || "en" };
       const res = mode === "login" ? await api.login(payload) : await api.register(payload);
-      login(res.token, res.shop);
+      login(res.token, res.shop, { persist: remember });
+      try { localStorage.removeItem(AUTOSAVE_KEY); } catch {}
       navigate("/app");
     } catch (err) {
       setError(err.message);
@@ -35,6 +67,21 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-screen place-items-center bg-paper px-5 py-10 font-body text-ink">
+      {/* Fixed toggle so login/register stays visible while filling the form */}
+      <div className="auth-toggle-fixed hidden sm:flex">
+        <button
+          onClick={() => { setMode("login"); setError(""); }}
+          className={`px-3 py-2 rounded-l-full text-sm font-medium ${mode === "login" ? "bg-white text-shopfront shadow-[var(--shadow-card)]" : "text-ink/60 bg-transparent"}`}
+        >
+          {t("login.loginBtn")}
+        </button>
+        <button
+          onClick={() => { setMode("register"); setError(""); }}
+          className={`px-3 py-2 rounded-r-full text-sm font-medium ${mode === "register" ? "bg-white text-shopfront shadow-[var(--shadow-card)]" : "text-ink/60 bg-transparent"}`}
+        >
+          {t("login.registerBtn")}
+        </button>
+      </div>
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-between">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-ink/60 hover:text-shopfront">
@@ -64,31 +111,50 @@ export default function LoginPage() {
                   value={form.name}
                   onChange={set("name")}
                   placeholder="Sharma Kirana Store"
-                  required
+                  aria-label={t("login.shopName")}
+                  autoComplete="organization"
                 />
+                {fieldErrors.name && <div className="text-terracotta text-sm mt-1">{fieldErrors.name}</div>}
               </Field>
             )}
-            <Field label={t("login.number")} hint={t("login.numberHint")}>
+            <Field label={t("login.number")} hint={t("login.numberHint") }>
               <input
                 className="input"
                 value={form.whatsapp_number}
                 onChange={set("whatsapp_number")}
                 placeholder="+9198XXXXXXXX"
                 inputMode="tel"
-                required
+                aria-label={t("login.number")}
+                autoComplete="tel"
               />
+              {fieldErrors.whatsapp_number && <div className="text-terracotta text-sm mt-1">{fieldErrors.whatsapp_number}</div>}
             </Field>
             <Field label={t("login.pin")}>
-              <input
-                className="input"
-                value={form.pin}
-                onChange={set("pin")}
-                placeholder="••••"
-                inputMode="numeric"
-                type="password"
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  className="input"
+                  value={form.pin}
+                  onChange={set("pin")}
+                  placeholder="••••"
+                  inputMode="numeric"
+                  type={showPin ? 'text' : 'password'}
+                  aria-label={t("login.pin")}
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                />
+                <button type="button" aria-label={showPin ? 'Hide PIN' : 'Show PIN'} onClick={() => setShowPin(s => !s)} style={{ position: 'absolute', right: 8, top: 8 }} className="text-xs text-ink/60">
+                  {showPin ? t('login.hide') || 'Hide' : t('login.show') || 'Show'}
+                </button>
+              </div>
+              {fieldErrors.pin && <div className="text-terracotta text-sm mt-1">{fieldErrors.pin}</div>}
             </Field>
+
+            <div className="flex items-center justify-between">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                <span className="text-xs">{t('login.remember') || 'Remember me'}</span>
+              </label>
+              <Link to="/forgot" className="text-xs text-ink/60 hover:underline">{t('login.forgot') || 'Forgot PIN?'}</Link>
+            </div>
 
             {error && (
               <p className="rounded-lg bg-terracotta/10 px-3 py-2 text-sm text-terracotta">
@@ -132,6 +198,20 @@ export default function LoginPage() {
           outline: none;
         }
         .input:focus { border-color: var(--color-marigold); box-shadow: 0 0 0 3px rgba(245,166,35,0.2); }
+        .auth-toggle-fixed {
+          position: fixed;
+          top: 18px;
+          right: 18px;
+          background: transparent;
+          border-radius: 9999px;
+          overflow: hidden;
+          z-index: 60;
+          box-shadow: 0 6px 20px rgba(8,15,24,0.06);
+        }
+        .auth-toggle-fixed button { border: 1px solid rgba(27,58,75,0.06); }
+        @media (max-width: 640px) {
+          .auth-toggle-fixed { left: 50%; transform: translateX(-50%); right: auto; }
+        }
       `}</style>
     </div>
   );

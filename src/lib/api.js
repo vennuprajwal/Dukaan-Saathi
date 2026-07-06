@@ -2,9 +2,19 @@
    backend (see vite.config.js). Attaches the JWT when present. */
 const TOKEN_KEY = "dukaan_token";
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
-export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+// Token helpers support persistent (localStorage) or session-only (sessionStorage)
+export const getToken = () => sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+export const setToken = (t, persist = true) => {
+  // remove any previous copies
+  sessionStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_KEY);
+  if (persist) localStorage.setItem(TOKEN_KEY, t);
+  else sessionStorage.setItem(TOKEN_KEY, t);
+};
+export const clearToken = () => {
+  sessionStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_KEY);
+};
 
 async function request(path, { method = "GET", body, auth = true, form } = {}) {
   const headers = {};

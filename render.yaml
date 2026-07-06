@@ -1,0 +1,44 @@
+# Render Blueprint — Dukaan Saathi (single Node process serves frontend + API)
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: dukaan-saathi
+    runtime: node
+    plan: starter # $7/mo — required for a persistent disk (free tier has none)
+    region: singapore # closest to India; change if preferred
+    # Install frontend deps, build dist/, then install server deps.
+    # better-sqlite3 compiles natively during the server install step.
+    buildCommand: npm ci && npm run build && npm --prefix server ci
+    startCommand: npm --prefix server start
+    healthCheckPath: /api/health
+    # Persistent disk holds the SQLite DB (+ WAL/SHM sidecars) across deploys.
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATA_DIR
+        value: /var/data
+      - key: VALIDATE_TWILIO_SIGNATURE
+        value: "true"
+      # Secrets — set these in the Render dashboard (never committed):
+      - key: JWT_SECRET
+        sync: false # use a fresh strong random value
+      - key: ANTHROPIC_API_KEY
+        sync: false # MUST be a real sk-ant-api… key
+      - key: CLAUDE_MODEL
+        sync: false # optional; defaults to claude-sonnet-5
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: SARVAM_STT_MODEL
+        sync: false # optional
+      - key: SARVAM_STT_URL
+        sync: false # optional
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false

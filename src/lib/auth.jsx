@@ -13,8 +13,8 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const login = (token, shopData) => {
-    setToken(token);
+  const login = (token, shopData, { persist = true } = {}) => {
+    setToken(token, persist);
     localStorage.setItem(SHOP_KEY, JSON.stringify(shopData));
     setShop(shopData);
   };
