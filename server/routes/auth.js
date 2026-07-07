@@ -47,6 +47,29 @@ authRouter.post("/login", async (req, res) => {
   return res.json({ token: issueToken(shop), shop: publicShop(shop) });
 });
 
+/* Reset PIN. This is a lightweight demo flow: possession of the WhatsApp
+   number is treated as proof of ownership (a real app would send an OTP to it).
+   Sets a new PIN for an already-registered shop and returns a fresh token. */
+authRouter.post("/reset-pin", async (req, res) => {
+  const { whatsapp_number, pin } = req.body || {};
+  const number = cleanNumber(whatsapp_number);
+  if (!number || !pin) {
+    return res.status(400).json({ error: "WhatsApp number and new PIN are required" });
+  }
+  if (String(pin).length < 4) {
+    return res.status(400).json({ error: "PIN must be at least 4 digits" });
+  }
+  const shop = await db
+    .prepare("SELECT * FROM shops WHERE whatsapp_number = ?")
+    .get(number);
+  if (!shop || !shop.pin_hash) {
+    return res.status(404).json({ error: "No shop registered with this number" });
+  }
+  await db.prepare("UPDATE shops SET pin_hash = ? WHERE id = ?").run(hashPin(pin), shop.id);
+  const updated = await db.prepare("SELECT * FROM shops WHERE id = ?").get(shop.id);
+  return res.json({ token: issueToken(updated), shop: publicShop(updated) });
+});
+
 function publicShop(shop) {
   return {
     id: shop.id,

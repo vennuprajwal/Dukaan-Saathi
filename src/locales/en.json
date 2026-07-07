@@ -23,11 +23,26 @@
     "eyebrow": "Every \"easy\" app still asks you to change how you work",
     "heading": "Digital tools keep failing the corner shop — for very human reasons.",
     "cards": {
-      "time": { "title": "No time", "body": "The shop is full at 8am. Nobody is going to stop and type entries into a form during the morning rush." },
-      "tech": { "title": "Low tech comfort", "body": "WhatsApp voice notes? Yes, daily. Navigating menus, dashboards and settings? That's a different world." },
-      "learn": { "title": "Learning curve", "body": "Every 'simple' billing app still needs a weekend of learning. Most owners quit by day three." },
-      "cost": { "title": "Perceived cost", "body": "₹500/month for software feels like a luxury when the pen-and-notebook has worked for 20 years." },
-      "habit": { "title": "Existing habits", "body": "The bahi-khata (ledger) and the customer's udhaar page are muscle memory. Change is friction." }
+      "time": {
+        "title": "No time",
+        "body": "The shop is full at 8am. Nobody is going to stop and type entries into a form during the morning rush."
+      },
+      "tech": {
+        "title": "Low tech comfort",
+        "body": "WhatsApp voice notes? Yes, daily. Navigating menus, dashboards and settings? That's a different world."
+      },
+      "learn": {
+        "title": "Learning curve",
+        "body": "Every 'simple' billing app still needs a weekend of learning. Most owners quit by day three."
+      },
+      "cost": {
+        "title": "Perceived cost",
+        "body": "₹500/month for software feels like a luxury when the pen-and-notebook has worked for 20 years."
+      },
+      "habit": {
+        "title": "Existing habits",
+        "body": "The bahi-khata (ledger) and the customer's udhaar page are muscle memory. Change is friction."
+      }
     },
     "closingTitle": "So we stopped asking shopkeepers to change.",
     "closingBody": "Dukaan Saathi meets them exactly where they already are: their voice, their WhatsApp, and their notebook."
@@ -35,9 +50,24 @@
   "how": {
     "eyebrow": "How it works",
     "heading": "Three ways in. Zero of them feel like software.",
-    "voice": { "label": "🎙️ Just Speak", "heading": "Speak a sale the way you'd tell a helper.", "body": "Talk in Hindi, Telugu or English. Dukaan Saathi transcribes it, understands item, quantity, price and party — and files it instantly.", "example": "\"Sugar do kilo, assi rupaye, cash\"" },
-    "photo": { "label": "📸 Just Snap", "heading": "Snap your notebook. It reads your handwriting.", "body": "Photograph a page of your bahi-khata. Our OCR reads each handwritten line and turns the whole day into clean, structured entries.", "example": "One photo → a full day of udhaar, digitised" },
-    "text": { "label": "💬 Just Text", "heading": "Ask your shop anything, on WhatsApp.", "body": "No dashboard to open. Message a plain question and get a plain answer — today's profit, who owes you, what's running low.", "example": "\"Aaj ka profit kitna hua?\"" }
+    "voice": {
+      "label": "🎙️ Just Speak",
+      "heading": "Speak a sale the way you'd tell a helper.",
+      "body": "Talk in Hindi, Telugu or English. Dukaan Saathi transcribes it, understands item, quantity, price and party — and files it instantly.",
+      "example": "\"Sugar do kilo, assi rupaye, cash\""
+    },
+    "photo": {
+      "label": "📸 Just Snap",
+      "heading": "Snap your notebook. It reads your handwriting.",
+      "body": "Photograph a page of your bahi-khata. Our OCR reads each handwritten line and turns the whole day into clean, structured entries.",
+      "example": "One photo → a full day of udhaar, digitised"
+    },
+    "text": {
+      "label": "💬 Just Text",
+      "heading": "Ask your shop anything, on WhatsApp.",
+      "body": "No dashboard to open. Message a plain question and get a plain answer — today's profit, who owes you, what's running low.",
+      "example": "\"Aaj ka profit kitna hua?\""
+    }
   },
   "demo": {
     "eyebrow": "The live demo",
@@ -58,10 +88,22 @@
     "eyebrow": "The magic loop",
     "heading": "One habit in. A running business out.",
     "steps": {
-      "in": { "title": "Speak · Snap · Text", "body": "The owner talks, sends a WhatsApp, or photographs the notebook." },
-      "ai": { "title": "AI Parsing Engine", "body": "Understands item, quantity, price, party & intent — in Hindi, Telugu or English." },
-      "db": { "title": "Ledger + Inventory", "body": "Sales, stock and udhaar update themselves, instantly and correctly." },
-      "out": { "title": "Plain-language Answer", "body": "A clear reply comes back: profit, dues, low stock — no dashboard needed." }
+      "in": {
+        "title": "Speak · Snap · Text",
+        "body": "The owner talks, sends a WhatsApp, or photographs the notebook."
+      },
+      "ai": {
+        "title": "AI Parsing Engine",
+        "body": "Understands item, quantity, price, party & intent — in Hindi, Telugu or English."
+      },
+      "db": {
+        "title": "Ledger + Inventory",
+        "body": "Sales, stock and udhaar update themselves, instantly and correctly."
+      },
+      "out": {
+        "title": "Plain-language Answer",
+        "body": "A clear reply comes back: profit, dues, low stock — no dashboard needed."
+      }
     },
     "footnote": "The loop closes in <b>under 3 seconds</b> — fast enough to use mid-sale, without ever putting the pen down for long."
   },
@@ -69,10 +111,22 @@
     "eyebrow": "The opportunity",
     "heading": "Built for the shop that was never invited to \"digital India.\"",
     "stats": {
-      "shops": { "label": "unorganised retail shops in India", "sub": "the vast majority still on pen & paper" },
-      "training": { "label": "of training required", "sub": "if you can send a voice note, you can run it" },
-      "log": { "label": "to log a single sale", "sub": "fast enough to use mid-rush" },
-      "voice": { "label": "of shop tasks by voice alone", "sub": "the dashboard becomes optional" }
+      "shops": {
+        "label": "unorganised retail shops in India",
+        "sub": "the vast majority still on pen & paper"
+      },
+      "training": {
+        "label": "of training required",
+        "sub": "if you can send a voice note, you can run it"
+      },
+      "log": {
+        "label": "to log a single sale",
+        "sub": "fast enough to use mid-rush"
+      },
+      "voice": {
+        "label": "of shop tasks by voice alone",
+        "sub": "the dashboard becomes optional"
+      }
     }
   },
   "compare": {
@@ -83,13 +137,25 @@
     "yes": "Yes",
     "no": "No",
     "rows": {
-      "learning": ["Learning curve", "None — speak or snap", "Days of training"],
-      "interface": ["Primary interface", "Voice / WhatsApp / photo", "Forms & dashboards"],
+      "learning": [
+        "Learning curve",
+        "None — speak or snap",
+        "Days of training"
+      ],
+      "interface": [
+        "Primary interface",
+        "Voice / WhatsApp / photo",
+        "Forms & dashboards"
+      ],
       "literacy": "Works for semi-literate owners",
       "language": "Hindi / Telugu native",
       "notebook": "Reads a handwritten notebook",
       "computer": "Needs a computer",
-      "setup": ["Setup time", "Minutes", "Weeks / consultants"],
+      "setup": [
+        "Setup time",
+        "Minutes",
+        "Weeks / consultants"
+      ],
       "market": "Built for unorganised retail"
     },
     "why1Q": "Why voice/WhatsApp-first, not a full ERP?",
@@ -133,7 +199,20 @@
     "toLogin": "Already registered? Log in",
     "langLabel": "Preferred language",
     "loggingIn": "Signing in…",
-    "creating": "Creating…"
+    "creating": "Creating…",
+    "remember": "Remember me",
+    "forgot": "Forgot PIN?",
+    "backToLogin": "Back to login",
+    "show": "Show",
+    "hide": "Hide",
+    "resetTitle": "Reset PIN",
+    "resetSubtitle": "Set a new PIN for your shop",
+    "resetBtn": "Reset PIN",
+    "resetting": "Resetting…",
+    "newPin": "New PIN",
+    "or": "or",
+    "tryDemo": "Try a live demo (no signup)",
+    "demoShopName": "Demo Kirana Store"
   },
   "dashboard": {
     "title": "Shop dashboard",
@@ -174,7 +253,21 @@
     "profitByItem": "Profit by item",
     "bestSeller": "is today's best seller",
     "mostProfit": "Most profit",
-    "noExpenses": "No expenses recorded today."
+    "noExpenses": "No expenses recorded today.",
+    "addSale": "Add sale",
+    "loadDemo": "Load demo data",
+    "exportCsv": "Export CSV",
+    "resetData": "Reset data",
+    "resetConfirm": "Clear all sales, dues, expenses and inventory for this shop?",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "saleValidation": "Enter an item and a positive amount",
+    "saleNeedCustomer": "Enter a customer name for udhaar",
+    "insightLowStock": "{{count}} item(s) low: {{items}}",
+    "insightDues": "{{amount}} pending from {{count}} customer(s)",
+    "insightLoss": "Running at a loss today — expenses {{expenses}}",
+    "insightProfit": "{{profit}} net profit so far today",
+    "insightBest": "{{item}} is flying off the shelf"
   },
   "sim": {
     "title": "WhatsApp Simulator",
@@ -186,7 +279,9 @@
     "record": "Record",
     "stop": "Stop",
     "transcribing": "transcribing…",
-    "voiceHint": "Tap the mic to send a voice note (needs Sarvam key)",
+    "voiceHint": "Tap the mic and speak — English, Hindi or Telugu. It types as you talk.",
+    "listening": "Listening…",
+    "micDenied": "Microphone permission denied.",
     "youSaid": "You said",
     "numberLabel": "Simulated number",
     "samples": {
@@ -199,6 +294,14 @@
       "stock": "kya kya khatam ho raha hai"
     }
   },
-  "lang": { "en": "English", "hi": "हिंदी", "te": "తెలుగు" },
-  "common": { "loading": "Loading…", "error": "Something went wrong.", "backHome": "Back to home" }
+  "lang": {
+    "en": "English",
+    "hi": "हिंदी",
+    "te": "తెలుగు"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong.",
+    "backHome": "Back to home"
+  }
 }

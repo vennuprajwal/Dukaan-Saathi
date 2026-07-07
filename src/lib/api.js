@@ -34,12 +34,24 @@ export const api = {
   health: () => request("/health", { auth: false }),
   register: (payload) => request("/auth/register", { method: "POST", body: payload, auth: false }),
   login: (payload) => request("/auth/login", { method: "POST", body: payload, auth: false }),
+  resetPin: (payload) => request("/auth/reset-pin", { method: "POST", body: payload, auth: false }),
   dashboard: () => request("/dashboard/dashboard"),
   collect: (customer_id, amount) =>
     request("/dashboard/payments", { method: "POST", body: { customer_id, amount } }),
   addExpense: (amount, category, note) =>
     request("/dashboard/expenses", { method: "POST", body: { amount, category, note } }),
+  addSale: (sale) => request("/dashboard/sales", { method: "POST", body: sale }),
   setLang: (lang) => request("/dashboard/lang", { method: "POST", body: { lang } }),
+  loadDemo: () => request("/dashboard/demo", { method: "POST", body: {} }),
+  resetData: () => request("/dashboard/reset", { method: "POST", body: {} }),
+  // CSV export: returns a Blob so the caller can trigger a download.
+  exportCsv: async () => {
+    const res = await fetch("/api/dashboard/export", {
+      headers: getToken() ? { Authorization: `Bearer ${getToken()}` } : {},
+    });
+    if (!res.ok) throw new Error(`Export failed (${res.status})`);
+    return res.blob();
+  },
 
   // Simulator (auth optional — falls back to a demo shop or an explicit number)
   simMessage: (text, number) =>

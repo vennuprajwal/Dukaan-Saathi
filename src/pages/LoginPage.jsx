@@ -10,7 +10,7 @@ export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login"); // login | register
+  const [mode, setMode] = useState("login"); // login | register | reset
   const [form, setForm] = useState({ whatsapp_number: "", pin: "", name: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -54,13 +54,35 @@ export default function LoginPage() {
     }
     try {
       const payload = { ...form, lang: i18n.resolvedLanguage?.slice(0, 2) || "en" };
-      const res = mode === "login" ? await api.login(payload) : await api.register(payload);
+      const res =
+        mode === "login" ? await api.login(payload)
+        : mode === "reset" ? await api.resetPin(payload)
+        : await api.register(payload);
       login(res.token, res.shop, { persist: remember });
       try { localStorage.removeItem(AUTOSAVE_KEY); } catch {}
       navigate("/app");
     } catch (err) {
       setError(err.message);
     } finally {
+      setBusy(false);
+    }
+  };
+
+  // Instant demo: register (or log into) a throwaway shop and seed it, so a
+  // visitor lands on a fully populated dashboard with one click.
+  const tryDemo = async () => {
+    setError("");
+    setBusy(true);
+    try {
+      const number = "+91" + Math.floor(7000000000 + (Date.now() % 2999999999));
+      const pin = "1234";
+      const lang = i18n.resolvedLanguage?.slice(0, 2) || "en";
+      const res = await api.register({ whatsapp_number: number, name: t("login.demoShopName") || "Demo Kirana Store", pin, lang });
+      login(res.token, res.shop, { persist: false });
+      await api.loadDemo();
+      navigate("/app");
+    } catch (err) {
+      setError(err.message);
       setBusy(false);
     }
   };
@@ -97,9 +119,11 @@ export default function LoginPage() {
             </span>
             <div>
               <h1 className="font-display text-2xl font-semibold text-shopfront">
-                {mode === "login" ? t("login.title") : t("login.registerBtn")}
+                {mode === "login" ? t("login.title") : mode === "reset" ? (t("login.resetTitle") || "Reset PIN") : t("login.registerBtn")}
               </h1>
-              <p className="text-sm text-ink/50">{t("login.subtitle")}</p>
+              <p className="text-sm text-ink/50">
+                {mode === "reset" ? (t("login.resetSubtitle") || "Set a new PIN for your shop") : t("login.subtitle")}
+              </p>
             </div>
           </div>
 
@@ -129,7 +153,7 @@ export default function LoginPage() {
               />
               {fieldErrors.whatsapp_number && <div className="text-terracotta text-sm mt-1">{fieldErrors.whatsapp_number}</div>}
             </Field>
-            <Field label={t("login.pin")}>
+            <Field label={mode === "reset" ? (t("login.newPin") || "New PIN") : t("login.pin")}>
               <div style={{ position: 'relative' }}>
                 <input
                   className="input"
@@ -153,7 +177,15 @@ export default function LoginPage() {
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                 <span className="text-xs">{t('login.remember') || 'Remember me'}</span>
               </label>
-              <Link to="/forgot" className="text-xs text-ink/60 hover:underline">{t('login.forgot') || 'Forgot PIN?'}</Link>
+              {mode === "reset" ? (
+                <button type="button" onClick={() => { setMode("login"); setError(""); }} className="text-xs text-ink/60 hover:underline">
+                  {t('login.backToLogin') || 'Back to login'}
+                </button>
+              ) : (
+                <button type="button" onClick={() => { setMode("reset"); setError(""); }} className="text-xs text-ink/60 hover:underline">
+                  {t('login.forgot') || 'Forgot PIN?'}
+                </button>
+              )}
             </div>
 
             {error && (
@@ -168,17 +200,33 @@ export default function LoginPage() {
               className="w-full rounded-full bg-marigold px-6 py-3 font-sans text-sm font-semibold text-shopfront transition-transform hover:-translate-y-0.5 disabled:opacity-50"
             >
               {busy
-                ? mode === "login" ? t("login.loggingIn") : t("login.creating")
-                : mode === "login" ? t("login.loginBtn") : t("login.registerBtn")}
+                ? mode === "login" ? t("login.loggingIn") : mode === "reset" ? (t("login.resetting") || "Resetting…") : t("login.creating")
+                : mode === "login" ? t("login.loginBtn") : mode === "reset" ? (t("login.resetBtn") || "Reset PIN") : t("login.registerBtn")}
             </button>
           </form>
 
+          {/* one-click demo */}
+          <div className="mt-4 flex items-center gap-3 text-xs text-ink/40">
+            <span className="h-px flex-1 bg-ink/10" />
+            {t("login.or") || "or"}
+            <span className="h-px flex-1 bg-ink/10" />
+          </div>
           <button
-            onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}
-            className="mt-5 w-full text-center text-sm font-medium text-terracotta hover:underline"
+            onClick={tryDemo}
+            disabled={busy}
+            className="mt-4 w-full rounded-full bg-shopfront px-6 py-3 font-sans text-sm font-semibold text-paper transition-transform hover:-translate-y-0.5 disabled:opacity-50"
           >
-            {mode === "login" ? t("login.toRegister") : t("login.toLogin")}
+            ✨ {t("login.tryDemo") || "Try a live demo (no signup)"}
           </button>
+
+          {mode !== "reset" && (
+            <button
+              onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}
+              className="mt-5 w-full text-center text-sm font-medium text-terracotta hover:underline"
+            >
+              {mode === "login" ? t("login.toRegister") : t("login.toLogin")}
+            </button>
+          )}
         </div>
 
         <p className="mt-4 text-center text-xs text-ink/40">

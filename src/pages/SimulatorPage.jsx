@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { Send, Mic, Square, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth-context.js";
+import { useSpeech } from "../hooks/useSpeech";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { TypingDots } from "../components/ui";
 
 let mid = 0;
 
 export default function SimulatorPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isAuthed } = useAuth();
   const [number, setNumber] = useState("+919812345678");
   const [messages, setMessages] = useState([]);
@@ -21,6 +22,18 @@ export default function SimulatorPage() {
   const scrollRef = useRef(null);
   const recRef = useRef(null);
   const chunksRef = useRef([]);
+
+  // Browser speech recognition (preferred); locale follows the UI language.
+  const uiLang = i18n.resolvedLanguage?.slice(0, 2) || "en";
+  const speech = useSpeech(uiLang);
+
+  // When a reply comes back in a language different from the UI, follow it so
+  // the shopkeeper sees the app in the language they actually spoke.
+  const followLanguage = (lang) => {
+    if (["en", "hi", "te"].includes(lang) && lang !== i18n.resolvedLanguage) {
+      i18n.changeLanguage(lang);
+    }
+  };
 
   // greeting (re-runs if language changes)
   useEffect(() => {
@@ -44,6 +57,7 @@ export default function SimulatorPage() {
     try {
       const res = await api.simMessage(content, isAuthed ? undefined : number);
       push("in", res.reply, { intent: res.intent });
+      followLanguage(res.language);
     } catch (e) {
       push("in", "⚠️ " + e.message);
     } finally {
@@ -51,7 +65,30 @@ export default function SimulatorPage() {
     }
   };
 
+  // Voice entry point. Prefers the browser's Web Speech API (instant, live
+  // captions, no server round-trip); falls back to recording + Sarvam STT when
+  // the browser can't do it (e.g. Firefox) or the browser attempt fails.
   const startRec = async () => {
+    if (speech.supported) {
+      setRecording(true);
+      try {
+        const transcript = (await speech.start()).trim();
+        setRecording(false);
+        if (transcript) {
+          await sendText(transcript);
+          return;
+        }
+        // Nothing captured — fall through to server recording as a backup.
+      } catch {
+        setRecording(false);
+        // fall through to Sarvam
+      }
+    }
+    return startServerRec();
+  };
+
+  // Fallback: record audio and let Sarvam transcribe it server-side.
+  const startServerRec = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const rec = new MediaRecorder(stream);
@@ -66,6 +103,7 @@ export default function SimulatorPage() {
           const res = await api.simVoice(blob, isAuthed ? undefined : number);
           if (res.transcript) push("out", `“${res.transcript}”`, { transcript: true });
           push("in", res.reply, { intent: res.intent });
+          followLanguage(res.language);
         } catch (e) {
           push("in", "⚠️ " + e.message);
         } finally {
@@ -76,11 +114,15 @@ export default function SimulatorPage() {
       recRef.current = rec;
       setRecording(true);
     } catch {
-      push("in", "🎙️ Microphone permission denied.");
+      push("in", "🎙️ " + (t("sim.micDenied") || "Microphone permission denied."));
     }
   };
 
   const stopRec = () => {
+    if (speech.supported && speech.listening) {
+      speech.stop();
+      return;
+    }
     recRef.current?.stop();
     setRecording(false);
   };
@@ -150,6 +192,14 @@ export default function SimulatorPage() {
               ))}
             </AnimatePresence>
             {busy && <TypingDots />}
+            {recording && speech.listening && (
+              <div className="flex justify-end">
+                <div className="max-w-[85%] rounded-2xl rounded-br-md bg-[#005c4b]/60 px-3.5 py-2.5 text-[13px] italic leading-snug text-paper/90">
+                  {speech.interim || t("sim.listening") || "Listening…"}
+                  <span className="ml-1 inline-block animate-pulse">▋</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* sample chips */}
