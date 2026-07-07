@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, getOrCreateShop } from "../db.js";
-import { hashPin, verifyPin, issueToken } from "../auth.js";
+import { hashPin, verifyPin, issueToken, requireAuth } from "../auth.js";
 
 export const authRouter = Router();
 
@@ -78,3 +78,21 @@ function publicShop(shop) {
     lang_pref: shop.lang_pref,
   };
 }
+
+authRouter.put("/profile", requireAuth, async (req, res) => {
+  const { name, lang } = req.body || {};
+  const shopId = req.shop.id;
+  
+  if (!name || name.trim().length === 0) {
+    return res.status(400).json({ error: "Shop name cannot be empty" });
+  }
+
+  await db.prepare("UPDATE shops SET name = ?, lang_pref = ? WHERE id = ?").run(
+    name.trim(),
+    lang || "en",
+    shopId
+  );
+  
+  const updated = await db.prepare("SELECT * FROM shops WHERE id = ?").get(shopId);
+  return res.json({ token: issueToken(updated), shop: publicShop(updated) });
+});

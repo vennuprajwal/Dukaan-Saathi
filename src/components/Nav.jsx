@@ -46,7 +46,7 @@ export default function Nav() {
                 e.preventDefault();
                 document.querySelector(l.href)?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="font-sans text-sm font-medium text-ink/70 transition-colors hover:text-terracotta"
+              className="font-sans text-sm font-medium text-ink opacity-70 transition-opacity hover:opacity-100 hover:text-terracotta"
             >
               {l.label}
             </a>
@@ -55,7 +55,7 @@ export default function Nav() {
 
           <Link
             to={isAuthed ? "/app" : "/login"}
-            className="rounded-full bg-marigold px-4 py-2 font-sans text-sm font-semibold text-shopfront shadow-sm transition-transform hover:-translate-y-0.5"
+            className="rounded-full bg-marigold px-4 py-2 font-sans text-sm font-semibold text-[#0F172A] shadow-sm transition-transform hover:-translate-y-0.5"
           >
             {isAuthed ? t("nav.dashboard") : t("nav.login")}
           </Link>
@@ -78,14 +78,14 @@ export default function Nav() {
                   setOpen(false);
                   setTimeout(() => document.querySelector(l.href)?.scrollIntoView({ behavior: "smooth" }), 50);
                 }} 
-                className="rounded-lg px-2 py-2.5 font-sans text-sm font-medium text-ink/80"
+                className="rounded-lg px-2 py-2.5 font-sans text-sm font-medium text-ink opacity-80"
               >
                 {l.label}
               </a>
             ))}
             <div className="px-2 py-2"><LanguageSwitcher /></div>
 
-            <Link to={isAuthed ? "/app" : "/login"} onClick={() => setOpen(false)} className="mt-1 rounded-full bg-marigold px-4 py-2.5 text-center font-sans text-sm font-semibold text-shopfront">
+            <Link to={isAuthed ? "/app" : "/login"} onClick={() => setOpen(false)} className="mt-1 rounded-full bg-marigold px-4 py-2.5 text-center font-sans text-sm font-semibold text-[#0F172A]">
               {isAuthed ? t("nav.dashboard") : t("nav.login")}
             </Link>
           </div>

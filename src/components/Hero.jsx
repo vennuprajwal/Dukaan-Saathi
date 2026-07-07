@@ -39,14 +39,14 @@ function HeroDashboardMock() {
         
         {/* Floating AI Sidebar */}
         <div className="relative flex w-[220px] flex-col rounded-xl bg-white shadow-lg ring-1 ring-black/5 overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-black/5 bg-shopfront px-3 py-3 text-white">
-             <span className="grid h-6 w-6 place-items-center rounded bg-leaf text-xs font-bold">दु</span>
+          <div className="flex items-center gap-2 border-b border-black/5 bg-shopfront px-3 py-3 text-paper">
+             <span className="grid h-6 w-6 place-items-center rounded bg-leaf text-xs font-bold text-white">दु</span>
              <span className="text-xs font-medium tracking-wide">Dukaan Saathi AI</span>
           </div>
           <div className="flex-1 p-3 space-y-3 bg-paper/50">
              {step >= 1 && (
                <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-end">
-                 <div className="max-w-[85%] rounded-xl rounded-tr-sm bg-shopfront px-3 py-2 text-[11px] text-white">
+                 <div className="max-w-[85%] rounded-xl rounded-tr-sm bg-shopfront px-3 py-2 text-[11px] text-paper">
                    Sold 2kg Rice and 1 packet milk to Ramesh
                  </div>
                </motion.div>
@@ -87,7 +87,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-leaf/25 bg-white/60 px-3 py-1 font-sans text-xs font-medium text-leaf"
+            className="inline-flex items-center gap-2 rounded-full border border-leaf/25 bg-paper px-3 py-1 font-sans text-xs font-medium text-leaf"
           >
             <Sparkles className="h-3.5 w-3.5" />
             {t("hero.badge")}
@@ -119,14 +119,14 @@ export default function Hero() {
           >
             <Link
               to="/login"
-              className="group inline-flex items-center gap-2 rounded-full bg-shopfront px-7 py-3.5 font-sans text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-shopfront-700"
+              className="group inline-flex items-center gap-2 rounded-full bg-shopfront px-7 py-3.5 font-sans text-sm font-semibold text-paper shadow-lg transition-transform hover:-translate-y-0.5 hover:opacity-90"
             >
               <PlayCircle className="h-5 w-5 text-marigold" />
               {t("hero.ctaPrimary")}
             </Link>
             <a
               href="#how"
-              className="inline-flex items-center gap-2 rounded-full border border-shopfront/10 px-6 py-3.5 font-sans text-sm font-semibold text-shopfront transition-colors hover:bg-white hover:border-transparent hover:shadow-md"
+              className="inline-flex items-center gap-2 rounded-full border border-shopfront/20 px-6 py-3.5 font-sans text-sm font-semibold text-shopfront transition-colors hover:bg-shopfront hover:text-paper hover:shadow-md"
             >
               {t("hero.ctaSecondary")}
               <ArrowRight className="h-4 w-4" />

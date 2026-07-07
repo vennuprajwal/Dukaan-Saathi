@@ -69,4 +69,10 @@ export const api = {
     return request("/ai/scan", { method: "POST", form: fd, auth: true });
   },
   simScanApply: (entries) => request("/ai/scan/apply", { method: "POST", body: { entries }, auth: true }),
+
+  updateProfile: async (payload) => {
+    const res = await request("/auth/profile", { method: "PUT", body: payload });
+    setToken(res.token);
+    return res;
+  },
 };

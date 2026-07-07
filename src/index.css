@@ -2,15 +2,15 @@
 
 /* ---- Design tokens (Tailwind v4 @theme) ---------------------------------- */
 @theme {
-  --color-marigold: #F59E0B;
-  --color-marigold-soft: #FDE68A;
-  --color-shopfront: #0F172A;
-  --color-shopfront-700: #1E293B;
-  --color-paper: #F8FAFC;
-  --color-paper-deep: #F1F5F9;
-  --color-terracotta: #EF4444;
-  --color-leaf: #10B981;
-  --color-ink: #020617;
+  --color-marigold: var(--marigold);
+  --color-marigold-soft: var(--marigold-soft);
+  --color-shopfront: var(--shopfront);
+  --color-shopfront-700: var(--shopfront-700);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-terracotta: var(--terracotta);
+  --color-leaf: var(--leaf);
+  --color-ink: var(--ink);
 
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -19,6 +19,31 @@
   --shadow-card: 0 18px 40px -20px rgba(27, 58, 75, 0.35);
   --shadow-phone: 0 40px 80px -30px rgba(27, 58, 75, 0.55);
 }
+
+:root {
+  --marigold: #F59E0B;
+  --marigold-soft: #FDE68A;
+  --shopfront: #0F172A;
+  --shopfront-700: #1E293B;
+  --paper: #F8FAFC;
+  --paper-deep: #F1F5F9;
+  --terracotta: #EF4444;
+  --leaf: #10B981;
+  --ink: #020617;
+}
+
+.dark {
+  --marigold: #F59E0B;
+  --marigold-soft: #451A03;
+  --shopfront: #FFFFFF;
+  --shopfront-700: #A1A1AA;
+  --paper: #09090B;
+  --paper-deep: #18181B;
+  --terracotta: #F87171;
+  --leaf: #34D399;
+  --ink: #E4E4E7;
+}
+
 
 /* ---- Base ---------------------------------------------------------------- */
 html {

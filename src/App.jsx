@@ -1,6 +1,7 @@
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./lib/auth-context.js";
+import { useTheme } from "./lib/theme.js";
 import SplashPage from "./pages/SplashPage";
 import MarketingPage from "./pages/MarketingPage";
 
@@ -25,6 +26,8 @@ function RequireAuth({ children }) {
 }
 
 export default function App() {
+  useTheme(); // Initialize theme globally
+
   return (
     <Routes>
       <Route path="/" element={<SplashPage />} />

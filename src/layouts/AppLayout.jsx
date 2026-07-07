@@ -96,7 +96,7 @@ export default function AppLayout() {
                 to={item.path}
                 className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                   isActive
-                    ? "bg-shopfront text-white shadow-md shadow-shopfront/20"
+                    ? "bg-shopfront text-paper shadow-md shadow-shopfront/20"
                     : "text-ink/60 hover:bg-black/5 hover:text-shopfront"
                 }`}
               >

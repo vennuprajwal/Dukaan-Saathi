@@ -14,10 +14,10 @@ export default function LanguageSwitcher({ className = "", tone = "light" }) {
 
   const base =
     tone === "dark"
-      ? "text-paper/70 hover:text-paper"
-      : "text-ink/60 hover:text-shopfront";
+      ? "text-paper opacity-70 hover:opacity-100"
+      : "text-ink opacity-60 hover:opacity-100 hover:text-shopfront";
   const activeCls =
-    tone === "dark" ? "bg-marigold text-shopfront" : "bg-shopfront text-paper";
+    tone === "dark" ? "bg-marigold text-shopfront" : "bg-shopfront text-paper opacity-100";
 
   return (
     <div
@@ -26,7 +26,7 @@ export default function LanguageSwitcher({ className = "", tone = "light" }) {
       } p-0.5 ${className}`}
     >
       <Languages
-        className={`ml-1.5 mr-0.5 h-3.5 w-3.5 ${tone === "dark" ? "text-paper/50" : "text-ink/40"}`}
+        className={`ml-1.5 mr-0.5 h-3.5 w-3.5 ${tone === "dark" ? "text-paper opacity-50" : "text-ink opacity-40"}`}
       />
       {LANGS.map((l) => (
         <button
