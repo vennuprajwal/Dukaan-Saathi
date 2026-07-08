@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../lib/auth-context";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import ThemeToggle from "../components/ThemeToggle";
 import AiChat from "../components/AiChat";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -82,8 +83,9 @@ export default function AppLayout() {
           </div>
         </div>
         
-        <div className="px-4 py-4 border-b border-black/5">
+        <div className="px-4 py-4 border-b border-black/5 flex items-center justify-between">
           <LanguageSwitcher />
+          <ThemeToggle />
         </div>
         
         <nav className="flex-1 space-y-1 px-4 py-4 overflow-y-auto custom-scrollbar">
@@ -141,7 +143,10 @@ export default function AppLayout() {
              <div className="grid h-8 w-8 place-items-center rounded-xl bg-shopfront text-sm font-bold text-marigold">दु</div>
              <span className="font-display text-lg font-bold tracking-tight text-shopfront">Dukaan Saathi</span>
            </div>
-           <LanguageSwitcher />
+           <div className="flex items-center gap-2">
+             <ThemeToggle />
+             <LanguageSwitcher />
+           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto bg-paper p-4 sm:p-6 custom-scrollbar pb-24 lg:pb-6">

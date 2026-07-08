@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Nav() {
   const { t } = useTranslation();
@@ -56,6 +57,7 @@ export default function Nav() {
               {l.label}
             </a>
           ))}
+          <ThemeToggle />
           <LanguageSwitcher />
 
           <Link
@@ -93,7 +95,10 @@ export default function Nav() {
                 {l.label}
               </a>
             ))}
-            <div className="px-2 py-2"><LanguageSwitcher /></div>
+            <div className="px-2 py-2 flex items-center justify-between">
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </div>
 
             <Link to={isAuthed ? "/app" : "/login"} onClick={() => setOpen(false)} className="mt-1 rounded-full bg-marigold px-4 py-2.5 text-center font-sans text-sm font-semibold text-[#0F172A]">
               {isAuthed ? t("nav.dashboard") : t("nav.login")}
