@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { User, LogOut, Moon, Sun, Save, Globe } from "lucide-react";
+import { User, LogOut, Save, Globe } from "lucide-react";
 import { Card } from "./DashboardPage";
 import { useAuth } from "../lib/auth-context";
 import { api } from "../lib/api";
-import { useTheme } from "../lib/theme";
 
 export default function SettingsPage() {
   const { t } = useOutletContext();
   const { shop, logout, login } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-  
+
   const [form, setForm] = useState({ name: "", lang: "en" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -94,27 +92,10 @@ export default function SettingsPage() {
         </Card>
 
         {/* Appearance Settings */}
-        <Card title="Appearance" icon={Moon}>
-          <div className="flex items-center justify-between max-w-md">
-            <div>
-              <p className="font-medium text-shopfront">Dark Mode</p>
-              <p className="text-sm text-ink/60">Switch between light and dark themes</p>
-            </div>
-            <button
-              onClick={toggleTheme}
-              className="relative inline-flex h-8 w-14 items-center rounded-full bg-shopfront/10 transition-colors focus:outline-none focus:ring-2 focus:ring-marigold focus:ring-offset-2"
-              style={{ backgroundColor: theme === "dark" ? "var(--marigold)" : "" }}
-            >
-              <span
-                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${theme === "dark" ? "translate-x-7" : "translate-x-1"}`}
-              >
-                {theme === "dark" ? (
-                  <Moon className="h-4 w-4 m-1 text-shopfront" />
-                ) : (
-                  <Sun className="h-4 w-4 m-1 text-marigold" />
-                )}
-              </span>
-            </button>
+        <Card title="Appearance" icon={User}>
+          <div className="max-w-md">
+            <p className="font-medium text-shopfront">Light Mode</p>
+            <p className="text-sm text-ink/60">The app is kept in light mode by default for a clean, consistent experience.</p>
           </div>
         </Card>
 
