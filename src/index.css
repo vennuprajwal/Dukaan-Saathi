@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ---- Design tokens (Tailwind v4 @theme) ---------------------------------- */
 @theme {
   --color-marigold: var(--marigold);
@@ -33,19 +31,6 @@
   --leaf: #10B981;
   --ink: #020617;
 }
-
-.dark {
-  --marigold: #F59E0B;
-  --marigold-soft: #451A03;
-  --shopfront: #FFFFFF;
-  --shopfront-700: #A1A1AA;
-  --paper: #09090B;
-  --paper-deep: #18181B;
-  --terracotta: #F87171;
-  --leaf: #34D399;
-  --ink: #E4E4E7;
-}
-
 
 /* ---- Base ---------------------------------------------------------------- */
 html {
