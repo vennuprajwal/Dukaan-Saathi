@@ -1,4 +1,5 @@
 import { db, normalize } from "../db.js";
+import { getNotificationsForShop } from "./notifications.js";
 
 /* All queries are scoped by shop_id. Timestamps are stored UTC; we compare in
    local time so "today" matches the shopkeeper's day. */
@@ -41,6 +42,120 @@ export async function todaySummary(shopId) {
   };
 }
 
+export async function monthlySales(shopId) {
+  const row = await db
+    .prepare(
+      `SELECT COALESCE(SUM(amount), 0) AS amount, COUNT(*) AS orders
+       FROM sales
+       WHERE shop_id = ? AND created_at >= datetime('now', 'start of month')`,
+    )
+    .get(shopId);
+  return {
+    amount: Number(row?.amount || 0),
+    orders: Number(row?.orders || 0),
+  };
+}
+
+export async function creditOverview(shopId) {
+  const rows = await db
+    .prepare(
+      `SELECT id, invoice_number, total_amount, paid_amount, due_date, status, created_at
+       FROM credit_invoices
+       WHERE seller_shop_id = ? OR buyer_shop_id = ?
+       ORDER BY due_date ASC, created_at DESC`,
+    )
+    .all(shopId, shopId);
+
+  const pending = rows.filter((invoice) => !["paid", "closed"].includes(String(invoice.status || "").toLowerCase()));
+  const pendingAmount = pending.reduce((sum, invoice) => sum + (Number(invoice.total_amount || 0) - Number(invoice.paid_amount || 0)), 0);
+  const receivedAmount = rows.reduce((sum, invoice) => sum + Number(invoice.paid_amount || 0), 0);
+  const outstandingAmount = rows.reduce((sum, invoice) => sum + (Number(invoice.total_amount || 0) - Number(invoice.paid_amount || 0)), 0);
+
+  return {
+    pendingCount: pending.length,
+    pendingAmount,
+    receivedAmount,
+    outstandingAmount,
+    invoices: rows,
+  };
+}
+
+export async function recentTransactions(shopId) {
+  const [salesRows, paymentsRows, creditRows] = await Promise.all([
+    db
+      .prepare(
+        `SELECT id, item_text AS title, amount, created_at, 'sale' AS kind
+         FROM sales WHERE shop_id = ? ORDER BY created_at DESC LIMIT 6`,
+      )
+      .all(shopId),
+    db
+      .prepare(
+        `SELECT p.id, COALESCE(c.name, 'Customer') AS title, p.amount, p.created_at, 'payment' AS kind
+         FROM payments p
+         LEFT JOIN customers c ON c.id = p.customer_id
+         WHERE p.shop_id = ? ORDER BY p.created_at DESC LIMIT 6`,
+      )
+      .all(shopId),
+    db
+      .prepare(
+        `SELECT id, invoice_number AS title, total_amount AS amount, created_at, 'credit' AS kind
+         FROM credit_invoices
+         WHERE seller_shop_id = ? OR buyer_shop_id = ? ORDER BY created_at DESC LIMIT 6`,
+      )
+      .all(shopId, shopId),
+  ]);
+
+  return [...salesRows, ...paymentsRows, ...creditRows]
+    .map((row) => ({ ...row, amount: Number(row.amount || 0) }))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 6);
+}
+
+export async function upcomingDueDates(shopId) {
+  const rows = await db
+    .prepare(
+      `SELECT id, invoice_number, due_date, total_amount, paid_amount, status
+       FROM credit_invoices
+       WHERE (seller_shop_id = ? OR buyer_shop_id = ?) AND status NOT IN ('Paid', 'closed')
+       ORDER BY due_date ASC, created_at DESC`,
+    )
+    .all(shopId, shopId);
+
+  return rows.map((row) => ({
+    ...row,
+    remaining: Math.max(0, Number(row.total_amount || 0) - Number(row.paid_amount || 0)),
+  }));
+}
+
+export async function dashboardOverview(shopId) {
+  const [todaySales, monthly, credits, transactions, notifications, dueDates, lowStockItems] = await Promise.all([
+    db
+      .prepare(
+        `SELECT COALESCE(SUM(amount), 0) AS amount
+         FROM sales WHERE shop_id = ? AND date(created_at, 'localtime') = date('now', 'localtime')`,
+      )
+      .get(shopId),
+    monthlySales(shopId),
+    creditOverview(shopId),
+    recentTransactions(shopId),
+    Promise.resolve(getNotificationsForShop(shopId).slice(-6).reverse()),
+    upcomingDueDates(shopId),
+    lowStock(shopId, 5),
+  ]);
+
+  return {
+    todaySales: Number(todaySales?.amount || 0),
+    monthlySales: monthly.amount,
+    pendingCredits: credits.pendingCount,
+    receivedPayments: credits.receivedAmount,
+    outstandingAmount: credits.outstandingAmount,
+    recentTransactions: transactions,
+    recentNotifications: notifications,
+    upcomingDueDates: dueDates,
+    lowStockAlerts: lowStockItems,
+  };
+}
+
 export async function salesFeed(shopId, limit = 25) {
   return db
     .prepare(
@@ -55,7 +170,9 @@ export async function salesFeed(shopId, limit = 25) {
 export async function inventory(shopId) {
   return db
     .prepare(
-      `SELECT id, name, unit, stock_qty, cost_price, sell_price
+      `SELECT id, name, unit, stock_qty, cost_price, sell_price,
+              supplier, purchase_price, selling_price, expiry_date, batch_number,
+              barcode, qr_code, low_stock_threshold
        FROM products WHERE shop_id = ? ORDER BY stock_qty ASC, name ASC`,
     )
     .all(shopId);
@@ -64,10 +181,12 @@ export async function inventory(shopId) {
 export async function lowStock(shopId, threshold = 5) {
   return db
     .prepare(
-      `SELECT name, unit, stock_qty FROM products
+      `SELECT id, name, unit, stock_qty, supplier, expiry_date, batch_number, barcode, qr_code,
+              COALESCE(low_stock_threshold, ?) AS low_stock_threshold
+       FROM products
        WHERE shop_id = ? AND stock_qty <= ? ORDER BY stock_qty ASC`,
     )
-    .all(shopId, threshold);
+    .all(threshold, shopId, threshold);
 }
 
 /* Outstanding udhaar per customer = udhaar sales − repayments.

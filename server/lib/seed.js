@@ -1,4 +1,5 @@
 import { db, normalize } from "../db.js";
+import { publishNotification, getNotificationsForShop, deleteNotification } from "./notifications.js";
 
 /* Demo data seeding. Populates a shop with realistic Indian Kirana Store data
    so a first-time visitor sees a live-looking dashboard immediately. Idempotent per call. */
@@ -25,6 +26,12 @@ export async function clearShopData(shopId) {
     { sql: "DELETE FROM customers WHERE shop_id = ?", args: [shopId] },
     { sql: "DELETE FROM products WHERE shop_id = ?", args: [shopId] },
   ]);
+
+  // Clear in-memory notifications for this shop
+  const ns = getNotificationsForShop(shopId);
+  for (const n of ns) {
+    deleteNotification(n.id, shopId);
+  }
 }
 
 export async function seedDemoData(shopId) {
@@ -118,5 +125,45 @@ export async function seedDemoData(shopId) {
 
   await db.batch(stmts);
 
+  // Seed notifications
+  publishNotification({
+    shopId,
+    title: "Low Stock Alert: Tata Salt",
+    message: "Tata Salt is running low in stock (only 3 units left). Consider restocking soon.",
+    category: "inventory",
+    createdAt: new Date().toISOString()
+  });
+  publishNotification({
+    shopId,
+    title: "Udhaar Due: Ramesh Sharma",
+    message: "Ramesh Sharma's credit limit has reached ₹450. Recommended follow-up.",
+    category: "credits",
+    amount: 450,
+    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+  });
+  publishNotification({
+    shopId,
+    title: "Payment Received: Suresh Verma",
+    message: "Suresh Verma paid ₹500 towards their outstanding balance.",
+    category: "payments",
+    amount: 500,
+    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString()
+  });
+  publishNotification({
+    shopId,
+    title: "Connection Request",
+    message: "Aashirvaad Distributors wants to connect with your shop for wholesale supply.",
+    category: "connections",
+    createdAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString()
+  });
+  publishNotification({
+    shopId,
+    title: "Order Logged via Voice",
+    message: "Successfully logged sale of 5 items via Voice Assistant.",
+    category: "orders",
+    createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+  });
+
   return { products: 147, customers: 182 };
 }
+

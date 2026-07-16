@@ -26,6 +26,11 @@ export const config = {
     model: process.env.SARVAM_STT_MODEL || "saarika:v2.5",
     url: process.env.SARVAM_STT_URL || "https://api.sarvam.ai/speech-to-text",
   },
+
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+  },
 };
 
 /* A usable Anthropic key is a real API key ("sk-ant-api…"). OAuth / gateway

@@ -3,7 +3,7 @@
     "howItWorks": "How it works",
     "liveDemo": "Live Demo",
     "impact": "Impact",
-    "team": "Team",
+    "team": "Overview",
     "seeItLive": "See it live",
     "dashboard": "Dashboard",
     "simulator": "Try on WhatsApp",
@@ -182,7 +182,7 @@
   },
   "footer": {
     "tagline": "The shopkeeper's AI saathi.",
-    "submission": "Hackathon submission · 2026",
+    "submission": "Built for modern retail operations",
     "disclaimer": "Built with React, Tailwind, Express & Claude. Voice by Sarvam AI, WhatsApp by Twilio."
   },
   "login": {
@@ -238,6 +238,7 @@
     "qty": "Qty",
     "amount": "Amount",
     "customer": "Customer",
+    "searchCustomer": "Search by Name or Phone...",
     "time": "Time",
     "refresh": "Refresh",
     "collectPrompt": "Amount received from {{name}}?",

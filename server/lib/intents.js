@@ -80,7 +80,7 @@ async function dayReport(shopId) {
 }
 
 /* ---- product / customer find-or-create ------------------------------------ */
-async function findOrCreateProduct(shopId, name, { unit = "unit", sellPrice = 0 } = {}) {
+async function findOrCreateProduct(shopId, name, { unit = "unit", sellPrice = 0, purchasePrice = 0, supplier = null, expiryDate = null, batchNumber = null, barcode = null, qrCode = null, lowStockThreshold = 5 } = {}) {
   const norm = normalize(name);
   let p = await db
     .prepare("SELECT * FROM products WHERE shop_id = ? AND name_norm = ?")
@@ -90,10 +90,10 @@ async function findOrCreateProduct(shopId, name, { unit = "unit", sellPrice = 0 
     const cost = sellPrice > 0 ? Math.round(sellPrice * 0.8) : 0;
     const info = await db
       .prepare(
-        `INSERT INTO products (shop_id, name, name_norm, unit, stock_qty, cost_price, sell_price)
-         VALUES (?, ?, ?, ?, 0, ?, ?)`,
+        `INSERT INTO products (shop_id, name, name_norm, unit, stock_qty, cost_price, sell_price, supplier, purchase_price, selling_price, expiry_date, batch_number, barcode, qr_code, low_stock_threshold)
+         VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(shopId, name, norm, unit, cost, sellPrice);
+      .run(shopId, name, norm, unit, cost, sellPrice, supplier || null, Number(purchasePrice || cost || 0), Number(sellPrice || 0), expiryDate || null, batchNumber || null, barcode || null, qrCode || null, Number(lowStockThreshold || 5));
     p = await db.prepare("SELECT * FROM products WHERE id = ?").get(info.lastInsertRowid);
   }
   return p;
@@ -134,9 +134,18 @@ async function logSale(p, shopId) {
   let party = p.party_name;
 
   if (payment_type === "udhaar") {
-    if (!party) return { replyKey: "need_customer", data: {} };
-    const c = await findOrCreateCustomer(shopId, party);
-    customerId = c.id;
+    if (p.customer_id) {
+      const c = await db.prepare("SELECT * FROM customers WHERE id = ? AND shop_id = ?").get(p.customer_id, shopId);
+      if (c) {
+        customerId = c.id;
+        party = c.name;
+      }
+    }
+    if (!customerId) {
+      if (!party) return { replyKey: "need_customer", data: {} };
+      const c = await findOrCreateCustomer(shopId, party);
+      customerId = c.id;
+    }
   }
 
   let amount = p.amount;
@@ -145,6 +154,13 @@ async function logSale(p, shopId) {
   const product = await findOrCreateProduct(shopId, item, {
     unit: p.unit,
     sellPrice: unitPrice || amount || 0,
+    purchasePrice: p.purchase_price || p.cost_price || 0,
+    supplier: p.supplier || null,
+    expiryDate: p.expiry_date || null,
+    batchNumber: p.batch_number || null,
+    barcode: p.barcode || null,
+    qrCode: p.qr_code || null,
+    lowStockThreshold: p.low_stock_threshold || 5,
   });
 
   if (amount == null && unitPrice != null) amount = unitPrice * qty;
@@ -179,7 +195,16 @@ async function logSale(p, shopId) {
 async function restock(p, shopId) {
   const item = p.item || "item";
   const qty = p.qty && p.qty > 0 ? p.qty : 1;
-  const product = await findOrCreateProduct(shopId, item, { unit: p.unit });
+  const product = await findOrCreateProduct(shopId, item, {
+    unit: p.unit,
+    purchasePrice: p.purchase_price || p.cost_price || 0,
+    supplier: p.supplier || null,
+    expiryDate: p.expiry_date || null,
+    batchNumber: p.batch_number || null,
+    barcode: p.barcode || null,
+    qrCode: p.qr_code || null,
+    lowStockThreshold: p.low_stock_threshold || 5,
+  });
   if (p.unit_price != null) {
     await db.prepare("UPDATE products SET cost_price = ? WHERE id = ?").run(p.unit_price, product.id);
   }
@@ -225,6 +250,16 @@ async function recordExpense(p, shopId) {
 
 async function addProduct(p, shopId) {
   const item = p.item || "item";
-  await findOrCreateProduct(shopId, item, { unit: p.unit, sellPrice: p.unit_price || 0 });
+  await findOrCreateProduct(shopId, item, {
+    unit: p.unit,
+    sellPrice: p.unit_price || 0,
+    purchasePrice: p.purchase_price || p.cost_price || 0,
+    supplier: p.supplier || null,
+    expiryDate: p.expiry_date || null,
+    batchNumber: p.batch_number || null,
+    barcode: p.barcode || null,
+    qrCode: p.qr_code || null,
+    lowStockThreshold: p.low_stock_threshold || 5,
+  });
   return { replyKey: "product_added", data: { item } };
 }

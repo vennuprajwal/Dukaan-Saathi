@@ -231,3 +231,46 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---- Printing / PDF layout utilities ------------------------------------ */
+@media print {
+  /* Hide standard screen elements */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the target print statement container */
+  #print-section, #print-section * {
+    visibility: visible;
+  }
+  
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Force background colors in prints */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Hide print layout from standard web view */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block !important;
+  }
+}

@@ -5,12 +5,14 @@ import {
   Wallet, TrendingUp, ShoppingBag, RefreshCw, LogOut,
   MessageSquare, Package, Users, AlertTriangle,
   Receipt, BarChart3, Star, Plus, Sparkles, Download, Trash2, X,
+  CalendarClock, BellRing, AlertCircle, CircleDollarSign
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, CartesianGrid, Cell,
 } from "recharts";
 import { api } from "../lib/api";
 import MorningBrief from "../components/MorningBrief";
+import CustomerSearchSelector from "../components/CustomerSearchSelector";
 
 export default function DashboardPage() {
   const { data, load, money, timeOf, t, err, loading, busy, setBusy, setErr } = useOutletContext();
@@ -144,6 +146,101 @@ export default function DashboardPage() {
 
         <InsightsStrip data={data} t={t} money={money} />
 
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard title="Today's Sales" value={money(data?.overview?.todaySales || 0)} icon={CircleDollarSign} tone="leaf" />
+          <SummaryCard title="Monthly Sales" value={money(data?.overview?.monthlySales || 0)} icon={TrendingUp} tone="shopfront" />
+          <SummaryCard title="Pending Credits" value={data?.overview?.pendingCredits || 0} icon={Receipt} tone="marigold" />
+          <SummaryCard title="Received Payments" value={money(data?.overview?.receivedPayments || 0)} icon={Wallet} tone="terracotta" />
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <div className="space-y-6 xl:col-span-2">
+            <Card title="Financial Pulse" icon={BarChart3} accent={money(data?.overview?.outstandingAmount || 0)}>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <MiniStat label="Outstanding" value={money(data?.overview?.outstandingAmount || 0)} tone="terracotta" />
+                <MiniStat label="Recent Transactions" value={data?.overview?.recentTransactions?.length || 0} tone="shopfront" />
+              </div>
+            </Card>
+
+            <Card title="Recent Transactions" icon={Receipt}>
+              <div className="space-y-2">
+                {(data?.overview?.recentTransactions || []).length ? (
+                  data.overview.recentTransactions.map((item) => (
+                    <div key={`${item.kind}-${item.id}`} className="flex items-center justify-between rounded-xl bg-paper px-3 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{item.title}</p>
+                        <p className="text-xs text-ink/50">{item.kind === "sale" ? "Sale" : item.kind === "payment" ? "Payment" : "Credit"}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-shopfront">{money(item.amount)}</p>
+                        <p className="text-xs text-ink/50">{new Date(item.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <Empty>No recent transactions yet.</Empty>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card title="Recent Notifications" icon={BellRing}>
+              <div className="space-y-2">
+                {(data?.overview?.recentNotifications || []).length ? (
+                  data.overview.recentNotifications.map((item) => (
+                    <div key={item.id} className="rounded-xl bg-paper px-3 py-3">
+                      <p className="text-sm font-semibold text-ink">{item.title}</p>
+                      <p className="mt-1 text-xs text-ink/60">{item.message}</p>
+                    </div>
+                  ))
+                ) : (
+                  <Empty>No notifications right now.</Empty>
+                )}
+              </div>
+            </Card>
+
+            <Card title="Upcoming Due Dates" icon={CalendarClock}>
+              <div className="space-y-2">
+                {(data?.overview?.upcomingDueDates || []).length ? (
+                  data.overview.upcomingDueDates.slice(0, 4).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between rounded-xl bg-paper px-3 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{item.invoice_number}</p>
+                        <p className="text-xs text-ink/50">{item.due_date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-terracotta">{money(item.remaining)}</p>
+                        <p className="text-xs text-ink/50">{item.status}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <Empty>No upcoming dues.</Empty>
+                )}
+              </div>
+            </Card>
+
+            <Card title="Low Stock Alerts" icon={AlertCircle}>
+              <div className="space-y-2">
+                {(data?.overview?.lowStockAlerts || []).length ? (
+                  data.overview.lowStockAlerts.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between rounded-xl bg-paper px-3 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{item.name}</p>
+                        <p className="text-xs text-ink/50">{item.unit}</p>
+                      </div>
+                      <span className="rounded-full bg-terracotta/10 px-2.5 py-1 text-xs font-semibold text-terracotta">{item.stock_qty} left</span>
+                    </div>
+                  ))
+                ) : (
+                  <Empty>All stock levels look healthy.</Empty>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+
         {data?.bestSeller && (
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl bg-marigold/10 px-4 py-3 text-sm text-shopfront ring-1 ring-marigold/20">
             <Star className="h-4 w-4 text-marigold" />
@@ -272,11 +369,17 @@ export function InsightsStrip({ data, t, money }) {
   );
 }
 
-export function AddSaleModal({ onClose, onSubmit, t }) {
-  const [form, setForm] = useState({ item: "", qty: "1", amount: "", unit: "unit", payment_type: "cash", party_name: "" });
+export function AddSaleModal({ onClose, onSubmit, t, defaultPaymentType = "cash" }) {
+  const [form, setForm] = useState({ item: "", qty: "1", amount: "", unit: "unit", payment_type: defaultPaymentType, party_name: "" });
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const handleSelectCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setForm((f) => ({ ...f, party_name: customer ? customer.name : "" }));
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -298,6 +401,7 @@ export function AddSaleModal({ onClose, onSubmit, t }) {
         unit: form.unit.trim() || "unit",
         payment_type: form.payment_type,
         party_name: form.payment_type === "udhaar" ? form.party_name.trim() : undefined,
+        customer_id: form.payment_type === "udhaar" ? selectedCustomer?.id : undefined,
       });
     } catch (err) {
       setError(err.message);
@@ -331,7 +435,11 @@ export function AddSaleModal({ onClose, onSubmit, t }) {
             ))}
           </div>
           {form.payment_type === "udhaar" && (
-            <input className="ds-input" placeholder={t("dashboard.customer")} value={form.party_name} onChange={set("party_name")} />
+            <CustomerSearchSelector
+              selectedCustomer={selectedCustomer}
+              onSelect={handleSelectCustomer}
+              t={t}
+            />
           )}
           {error && <p className="rounded-lg bg-terracotta/10 px-3 py-2 text-sm text-terracotta">{error}</p>}
           <button type="submit" disabled={busy} className="w-full rounded-full bg-marigold px-6 py-2.5 text-sm font-semibold text-shopfront disabled:opacity-50">
@@ -340,6 +448,37 @@ export function AddSaleModal({ onClose, onSubmit, t }) {
         </form>
         <style>{`.ds-input{width:100%;border-radius:0.6rem;border:1px solid rgba(27,58,75,0.15);padding:0.55rem 0.75rem;font-size:0.9rem;outline:none}.ds-input:focus{border-color:var(--color-marigold);box-shadow:0 0 0 3px rgba(245,166,35,0.2)}`}</style>
       </div>
+    </div>
+  );
+}
+
+export function SummaryCard({ title, value, icon: Icon, tone }) {
+  const tones = {
+    leaf: "bg-leaf/10 text-leaf",
+    marigold: "bg-marigold/15 text-marigold",
+    shopfront: "bg-shopfront/10 text-shopfront",
+    terracotta: "bg-terracotta/10 text-terracotta",
+  };
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-[var(--shadow-card)] ring-1 ring-black/5">
+      <div className={`inline-grid h-10 w-10 place-items-center rounded-xl ${tones[tone]}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <p className="mt-3 font-sans text-xs font-semibold uppercase tracking-wide text-ink/50">{title}</p>
+      <p className="mt-1 font-display text-2xl font-semibold text-shopfront">{value}</p>
+    </div>
+  );
+}
+
+export function MiniStat({ label, value, tone }) {
+  const tones = {
+    terracotta: "bg-terracotta/10 text-terracotta",
+    shopfront: "bg-shopfront/10 text-shopfront",
+  };
+  return (
+    <div className={`rounded-2xl px-3 py-3 ${tones[tone]}`}>
+      <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
+      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
 }

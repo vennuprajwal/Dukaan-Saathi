@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, AlertTriangle, Info, X } from "lucide-react";
 
@@ -21,8 +21,7 @@ const TONES = {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const idRef = useRef(0);
-
-  const remove = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+  const seenRef = useRef(new Set());
 
   const show = useCallback(
     (message, { tone = "info", duration = 3500 } = {}) => {
@@ -31,8 +30,37 @@ export function ToastProvider({ children }) {
       if (duration > 0) setTimeout(() => remove(id), duration);
       return id;
     },
-    [remove],
+    [],
   );
+
+  const remove = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const token = sessionStorage.getItem("dukaan_token") || localStorage.getItem("dukaan_token");
+        if (!token) return;
+        const res = await fetch("/api/credit/notifications/recent", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const notifications = data.notifications || [];
+        for (const notification of notifications) {
+          const dedupeKey = `${notification.id || notification.message || notification.title}`;
+          if (seenRef.current.has(dedupeKey)) continue;
+          seenRef.current.add(dedupeKey);
+          const message = `${notification.title}: ${notification.amount ? `₹${notification.amount}` : ""}`.trim();
+          show(message, { tone: "info", duration: 5000 });
+        }
+      } catch {
+        // ignore notification polling errors
+      }
+    };
+
+    const timer = window.setInterval(poll, 3000);
+    return () => window.clearInterval(timer);
+  }, [show]);
 
   const api = {
     show,

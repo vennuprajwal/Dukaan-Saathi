@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function SplashPage() {
   const [step, setStep] = useState(0);
@@ -9,9 +9,10 @@ export default function SplashPage() {
   const splashKey = "dukaan_splash_seen_v2";
 
   useEffect(() => {
-    // Check if user has already seen the updated splash sequence
+    // Check if user has already seen the splash sequence
     if (localStorage.getItem(splashKey) === "true") {
-      navigate("/onboarding", { replace: true });
+      // Directly show final CTA step
+      setStep(7);
       return;
     }
 
@@ -35,7 +36,7 @@ export default function SplashPage() {
 
   const handleFinish = () => {
     localStorage.setItem(splashKey, "true");
-    navigate("/onboarding");
+    navigate("/login");
   };
 
   return (
@@ -193,17 +194,14 @@ export default function SplashPage() {
                   <p className="text-marigold">Powered by AI</p>
                 </div>
 
-                <button
-                  onClick={handleFinish}
-                  className="group relative inline-flex items-center gap-3 rounded-full bg-white px-8 py-4 text-base font-bold text-shopfront transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
-                >
-                  🚀 Get Started
-                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </button>
+                <div className="flex space-x-4">
+                  <Link to="/login" className="group relative inline-flex items-center gap-3 rounded-full bg-white px-8 py-4 text-base font-bold text-shopfront transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]">Login</Link>
+                  <Link to="/register" className="group relative inline-flex items-center gap-3 rounded-full bg-white px-8 py-4 text-base font-bold text-shopfront transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]">Register</Link>
+                </div>
                 
                 <div className="text-xs font-medium text-white/40 pt-4">
-                  <p>Team Zero Friction</p>
-                  <p>Building the Future of Kirana Stores</p>
+                  <p>Built for modern retail operations</p>
+                  <p>From manual workflows to intelligent growth</p>
                 </div>
               </motion.div>
             )}

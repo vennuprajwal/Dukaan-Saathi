@@ -3,7 +3,7 @@
     "howItWorks": "कैसे काम करता है",
     "liveDemo": "लाइव डेमो",
     "impact": "प्रभाव",
-    "team": "टीम",
+    "team": "अवलोकन",
     "seeItLive": "लाइव देखें",
     "dashboard": "डैशबोर्ड",
     "simulator": "WhatsApp पर आज़माएँ",
@@ -182,7 +182,7 @@
   },
   "footer": {
     "tagline": "दुकानदार का AI साथी।",
-    "submission": "हैकाथॉन सबमिशन · 2026",
+    "submission": "आधुनिक खुदरा संचालन के लिए बनाया गया",
     "disclaimer": "React, Tailwind, Express और Claude से बना। वॉइस Sarvam AI से, WhatsApp Twilio से।"
   },
   "login": {
@@ -238,6 +238,7 @@
     "qty": "मात्रा",
     "amount": "रकम",
     "customer": "ग्राहक",
+    "searchCustomer": "नाम या फोन से खोजें...",
     "time": "समय",
     "refresh": "रिफ़्रेश",
     "collectPrompt": "{{name}} से कितने पैसे मिले?",

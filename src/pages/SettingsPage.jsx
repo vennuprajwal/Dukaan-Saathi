@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
-import { User, LogOut, Save, Globe } from "lucide-react";
+import { useOutletContext, useNavigate } from "react-router-dom";
+import { User, LogOut, Save, Globe, Store, Phone, Mail, MapPin, Image as ImageIcon, Briefcase } from "lucide-react";
 import { Card } from "./DashboardPage";
 import { useAuth } from "../lib/auth-context";
 import { api } from "../lib/api";
@@ -8,8 +8,18 @@ import { api } from "../lib/api";
 export default function SettingsPage() {
   const { t } = useOutletContext();
   const { shop, logout, login } = useAuth();
+  const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: "", lang: "en" });
+  const [form, setForm] = useState({
+    shop_name: "",
+    owner_name: "",
+    mobile_number: "",
+    email: "",
+    shop_address: "",
+    shop_logo: "",
+    business_category: "",
+    lang: "en",
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -18,7 +28,13 @@ export default function SettingsPage() {
   useEffect(() => {
     if (shop) {
       setForm({
-        name: shop.name || "",
+        shop_name: shop.shop_name || shop.name || "",
+        owner_name: shop.owner_name || "",
+        mobile_number: shop.mobile_number || shop.whatsapp_number || "",
+        email: shop.email || "",
+        shop_address: shop.shop_address || "",
+        shop_logo: shop.shop_logo || "",
+        business_category: shop.business_category || "",
         lang: shop.lang_pref || "en"
       });
     }
@@ -53,13 +69,87 @@ export default function SettingsPage() {
         <Card title="Shop Profile" icon={User}>
           <form onSubmit={handleSaveProfile} className="space-y-4 max-w-md">
             <div>
-              <label className="block text-sm font-medium text-ink/70 mb-1">Store Name</label>
+              <label className="block text-sm font-medium text-ink/70 mb-1 flex items-center gap-1.5">
+                <Store className="h-4 w-4" /> Shop Name
+              </label>
               <input
                 className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2.5 text-sm text-shopfront outline-none focus:border-marigold focus:ring-2 focus:ring-marigold/20"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                value={form.shop_name}
+                onChange={(e) => setForm({ ...form, shop_name: e.target.value })}
                 placeholder="My Awesome Shop"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink/70 mb-1 flex items-center gap-1.5">
+                <User className="h-4 w-4" /> Owner Name
+              </label>
+              <input
+                className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2.5 text-sm text-shopfront outline-none focus:border-marigold focus:ring-2 focus:ring-marigold/20"
+                value={form.owner_name}
+                onChange={(e) => setForm({ ...form, owner_name: e.target.value })}
+                placeholder="Owner name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink/70 mb-1 flex items-center gap-1.5">
+                <Phone className="h-4 w-4" /> Mobile Number
+              </label>
+              <input
+                className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2.5 text-sm text-shopfront outline-none focus:border-marigold focus:ring-2 focus:ring-marigold/20"
+                value={form.mobile_number}
+                onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
+                placeholder="+91XXXXXXXXXX"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink/70 mb-1 flex items-center gap-1.5">
+                <Mail className="h-4 w-4" /> Email
+              </label>
+              <input
+                className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2.5 text-sm text-shopfront outline-none focus:border-marigold focus:ring-2 focus:ring-marigold/20"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="owner@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink/70 mb-1 flex items-center gap-1.5">
+                <MapPin className="h-4 w-4" /> Shop Address
+              </label>
+              <input
+                className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2.5 text-sm text-shopfront outline-none focus:border-marigold focus:ring-2 focus:ring-marigold/20"
+                value={form.shop_address}
+                onChange={(e) => setForm({ ...form, shop_address: e.target.value })}
+                placeholder="City, Area, Street"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink/70 mb-1 flex items-center gap-1.5">
+                <ImageIcon className="h-4 w-4" /> Shop Logo URL
+              </label>
+              <input
+                className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2.5 text-sm text-shopfront outline-none focus:border-marigold focus:ring-2 focus:ring-marigold/20"
+                value={form.shop_logo}
+                onChange={(e) => setForm({ ...form, shop_logo: e.target.value })}
+                placeholder="https://example.com/logo.png"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink/70 mb-1 flex items-center gap-1.5">
+                <Briefcase className="h-4 w-4" /> Business Category
+              </label>
+              <input
+                className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2.5 text-sm text-shopfront outline-none focus:border-marigold focus:ring-2 focus:ring-marigold/20"
+                value={form.business_category}
+                onChange={(e) => setForm({ ...form, business_category: e.target.value })}
+                placeholder="Grocery, Pharmacy, Bakery..."
               />
             </div>
             
@@ -108,6 +198,7 @@ export default function SettingsPage() {
             onClick={() => {
               if (window.confirm("Are you sure you want to log out?")) {
                 logout();
+                navigate("/login");
               }
             }}
             className="inline-flex items-center gap-2 rounded-full border border-terracotta/30 bg-terracotta/5 px-5 py-2.5 text-sm font-semibold text-terracotta hover:bg-terracotta hover:text-white transition-colors"

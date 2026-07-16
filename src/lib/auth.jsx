@@ -1,37 +1,54 @@
-import { useEffect, useState } from "react";
-import { getToken, setToken, clearToken } from "./api";
+import { useState, useEffect } from "react";
+import { getToken, setToken, clearToken, setUnauthorizedCallback } from "./api";
 import { AuthCtx } from "./auth-context.js";
 
 const SHOP_KEY = "dukaan_shop";
 
+function loadShop() {
+  try {
+    const s = sessionStorage.getItem(SHOP_KEY) || localStorage.getItem(SHOP_KEY);
+    return s ? JSON.parse(s) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [shop, setShop] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(SHOP_KEY) || "null");
-    } catch {
-      return null;
-    }
-  });
+  const [shop, setShop] = useState(loadShop);
+
+  useEffect(() => {
+    setUnauthorizedCallback(() => {
+      logout();
+    });
+    return () => setUnauthorizedCallback(null);
+  }, []);
 
   const login = (token, shopData, { persist = true } = {}) => {
+    // Write token to storage FIRST so getToken() is truthy before React re-renders
     setToken(token, persist);
-    localStorage.setItem(SHOP_KEY, JSON.stringify(shopData));
+    if (persist) {
+      localStorage.setItem(SHOP_KEY, JSON.stringify(shopData));
+      sessionStorage.removeItem(SHOP_KEY);
+    } else {
+      sessionStorage.setItem(SHOP_KEY, JSON.stringify(shopData));
+      localStorage.removeItem(SHOP_KEY);
+    }
+    // Then update React state — isAuthed will be true on the very next render
     setShop(shopData);
   };
 
   const logout = () => {
     clearToken();
     localStorage.removeItem(SHOP_KEY);
+    sessionStorage.removeItem(SHOP_KEY);
     setShop(null);
   };
 
-  // if the token vanished (e.g. cleared elsewhere), drop the shop too
-  useEffect(() => {
-    if (shop && !getToken()) setShop(null);
-  }, [shop]);
+  // isAuthed is derived purely from storage so it is always in sync
+  const isAuthed = Boolean(getToken() && shop);
 
   return (
-    <AuthCtx.Provider value={{ shop, isAuthed: Boolean(shop && getToken()), login, logout }}>
+    <AuthCtx.Provider value={{ shop, isAuthed, login, logout }}>
       {children}
     </AuthCtx.Provider>
   );

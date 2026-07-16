@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../lib/api";
 import {
   LayoutDashboard, ShoppingBag, Package, Users, Receipt, PieChart,
-  Target, Mic, Scan, Settings, Info, LogOut, Sparkles
+  Target, Mic, Scan, Settings, Info, LogOut, Sparkles, Store, Bell, BookOpen
 } from "lucide-react";
 import { useAuth } from "../lib/auth-context";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -56,10 +56,13 @@ export default function AppLayout() {
 
   const navItems = [
     { name: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
+    { name: "Shop Directory", path: "/app/directory", icon: Store },
+    { name: "Notifications", path: "/app/notifications", icon: Bell },
     { name: "Dukaan Saathi AI", path: "/app/ai", icon: Sparkles },
     { name: "Sales", path: "/app/sales", icon: ShoppingBag },
     { name: "Inventory", path: "/app/inventory", icon: Package },
     { name: "Udhaar", path: "/app/udhaar", icon: Users },
+    { name: "Customer Ledger", path: "/app/ledger", icon: BookOpen },
     { name: "Reports", path: "/app/reports", icon: PieChart },
     { name: "Business Coach", path: "/app/coach", icon: Target },
     { name: "Voice Assistant", path: "/app/voice", icon: Mic },
@@ -76,10 +79,10 @@ export default function AppLayout() {
       {/* Desktop Sidebar */}
       <aside className="hidden w-64 flex-col border-r border-black/5 bg-white/50 backdrop-blur-xl lg:flex">
         <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-black/5">
-          <div className="flex items-center gap-3">
+          <Link to="/app/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-shopfront text-sm font-bold text-marigold">दु</div>
             <span className="font-display text-lg font-bold tracking-tight text-shopfront">Dukaan Saathi</span>
-          </div>
+          </Link>
         </div>
         
         <div className="px-4 py-4 border-b border-black/5">
@@ -124,23 +127,26 @@ export default function AppLayout() {
               </Link>
             );
           })}
-          <button
-            onClick={logout}
-            className="group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-terracotta/80 transition-all hover:bg-terracotta/10 hover:text-terracotta"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+            <button
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-terracotta/80 transition-all hover:bg-terracotta/10 hover:text-terracotta"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
         </nav>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex w-full flex-1 flex-col overflow-hidden relative">
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-black/5 bg-white/50 px-4 backdrop-blur-xl sm:px-6 lg:hidden">
-           <div className="flex items-center gap-3">
+           <Link to="/app/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
              <div className="grid h-8 w-8 place-items-center rounded-xl bg-shopfront text-sm font-bold text-marigold">दु</div>
              <span className="font-display text-lg font-bold tracking-tight text-shopfront">Dukaan Saathi</span>
-           </div>
+           </Link>
            <LanguageSwitcher />
         </header>
 

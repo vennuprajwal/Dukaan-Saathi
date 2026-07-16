@@ -7,6 +7,8 @@ import { dbReady } from "./db.js"; // schema init (awaited before serving)
 import { authRouter } from "./routes/auth.js";
 import { dataRouter } from "./routes/data.js";
 import { simulateRouter } from "./routes/simulate.js";
+import { connectionsRouter } from "./routes/connections.js";
+import { creditRouter } from "./routes/credit.js";
 
 const app = express();
 app.use(cors());
@@ -20,6 +22,8 @@ app.get("/api/health", (_req, res) =>
 app.use("/api/auth", authRouter);
 app.use("/api/dashboard", dataRouter);
 app.use("/api/ai", simulateRouter);
+app.use("/api/connections", connectionsRouter);
+app.use("/api/credit", creditRouter);
 
 // In production, this same process serves the built Vite frontend (../dist).
 // Static assets first, then an SPA fallback so client-side routes (/app,
