@@ -6,10 +6,10 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: true, // bind IPv4 + IPv6 so localhost/127.0.0.1 both resolve on Windows
-    open: true, // auto-launch the browser on `npm run dev`
+    host: true,
+    port: 5173, // Force port 5173 to match Google OAuth config
+    open: true,
     proxy: {
-      // dev-time: forward API + webhook calls to the Express backend on :3001
       '/api': 'http://localhost:3001',
       '/webhooks': 'http://localhost:3001',
     },

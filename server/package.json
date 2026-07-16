@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch-path=index.js --watch-path=config.js --watch-path=db.js --watch-path=scheduler.js --watch-path=./routes --watch-path=./migrations index.js",
+    "dev": "node index.js",
     "test:pipeline": "node scripts/test-pipeline.js"
   },
   "dependencies": {
