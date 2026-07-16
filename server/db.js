@@ -251,7 +251,8 @@ async function applyMigrations() {
     "005-reminder-history.js", 
     "006-auth-columns.js",
     "007-customer-due-date.js",
-    "008-reminder-trigger.js"
+    "008-reminder-trigger.js",
+    "009-add-product-category.js"
   ];
   for (const file of migrationFiles) {
     if (applied.has(file)) continue;
