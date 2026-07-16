@@ -1,7 +1,29 @@
 import { EventEmitter } from 'node:events';
+import { dbReady, db } from '../db.js';
 
 const emitter = new EventEmitter();
 let notificationHistory = [];
+
+// Load persisted notifications on start
+dbReady.then(async () => {
+  try {
+    const rows = await db.prepare("SELECT * FROM notifications ORDER BY created_at ASC").all();
+    notificationHistory = rows.map((row) => ({
+      id: row.id,
+      shopId: row.shop_id,
+      recipientShopId: row.shop_id,
+      title: row.title,
+      message: row.message,
+      category: row.category,
+      read: row.read === 1,
+      amount: row.amount,
+      requestId: row.request_id,
+      createdAt: row.created_at,
+    }));
+  } catch (err) {
+    console.error("Failed to load notifications from database:", err.message);
+  }
+});
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -22,6 +44,25 @@ export function publishNotification(payload) {
     ...payload,
     category: payload.category || payload.type || 'general',
   });
+  
+  // Persist to database asynchronously
+  db.prepare(
+    `INSERT INTO notifications (id, shop_id, title, message, category, read, amount, request_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    entry.id,
+    entry.shopId || entry.recipientShopId || null,
+    entry.title,
+    entry.message,
+    entry.category,
+    entry.read ? 1 : 0,
+    entry.amount || null,
+    entry.requestId || null,
+    entry.createdAt
+  ).catch((err) => {
+    console.error("Failed to persist notification to SQLite:", err.message);
+  });
+
   notificationHistory = [...notificationHistory, entry];
   emitter.emit('notification', entry);
   return entry;
@@ -71,15 +112,27 @@ export function markNotificationRead(id, shopId) {
   const target = notificationHistory.find((item) => item.id === id && (item.shopId === shopId || item.recipientShopId === shopId));
   if (!target) return false;
   target.read = true;
+  db.prepare("UPDATE notifications SET read = 1 WHERE id = ?").run(id).catch((err) => {
+    console.error("Failed to mark notification read in SQLite:", err.message);
+  });
   return true;
 }
 
 export function deleteNotification(id, shopId) {
   const before = notificationHistory.length;
   notificationHistory = notificationHistory.filter((item) => !(item.id === id && (item.shopId === shopId || item.recipientShopId === shopId)));
-  return notificationHistory.length < before;
+  if (notificationHistory.length < before) {
+    db.prepare("DELETE FROM notifications WHERE id = ?").run(id).catch((err) => {
+      console.error("Failed to delete notification in SQLite:", err.message);
+    });
+    return true;
+  }
+  return false;
 }
 
 export function resetNotificationsForTests() {
   notificationHistory = [];
+  db.prepare("DELETE FROM notifications").run().catch((err) => {
+    console.error("Failed to reset notifications in SQLite for tests:", err.message);
+  });
 }

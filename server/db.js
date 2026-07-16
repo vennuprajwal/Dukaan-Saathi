@@ -210,9 +210,21 @@ CREATE TABLE IF NOT EXISTS reminders (
   message        TEXT NOT NULL,
   amount         REAL NOT NULL,
   sent_via       TEXT NOT NULL,
-  status         TEXT NOT NULL DEFAULT 'sent',
+  status         TEXT NOT NULL DEFAULT 'sent'
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id             TEXT PRIMARY KEY,
+  shop_id        INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  title          TEXT NOT NULL,
+  message        TEXT NOT NULL,
+  category       TEXT NOT NULL DEFAULT 'general',
+  read           INTEGER NOT NULL DEFAULT 0,
+  amount         REAL,
+  request_id     INTEGER,
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE INDEX IF NOT EXISTS idx_notifications_shop ON notifications(shop_id, created_at);
 `;
 
 /* Resolves once the schema exists. Boot code (index.js) and scripts await this

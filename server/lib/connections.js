@@ -1,4 +1,5 @@
 import { db } from '../db.js';
+import { publishNotification } from './notifications.js';
 
 function normalizeStatus(status) {
   return status === 'accept' || status === 'accepted' ? 'accepted' : status === 'reject' || status === 'rejected' ? 'rejected' : 'pending';
@@ -34,6 +35,18 @@ export async function sendConnectionRequest(fromShopId, toShopId) {
     `INSERT INTO business_connections (sender_shop_id, recipient_shop_id, status, created_at)
      VALUES (?, ?, 'pending', datetime('now'))`,
   ).run(fromShopId, toShopId);
+
+  const senderShop = await db.prepare("SELECT name FROM shops WHERE id = ?").get(fromShopId);
+  const senderName = senderShop?.name || "A shop";
+
+  publishNotification({
+    shopId: toShopId,
+    recipientShopId: toShopId,
+    title: "New Shop Connection Request",
+    message: `${senderName} wants to connect with your shop.`,
+    category: "connections",
+    requestId: info.lastInsertRowid,
+  });
 
   return db.prepare(`SELECT * FROM business_connections WHERE id = ?`).get(info.lastInsertRowid);
 }

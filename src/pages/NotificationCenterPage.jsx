@@ -23,6 +23,7 @@ const CATEGORY_META = {
 
 export default function NotificationCenterPage() {
   const { t } = useOutletContext();
+  const toast = useToast();
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -32,6 +33,21 @@ export default function NotificationCenterPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [responding, setResponding] = useState({});
+
+  const handleRespondConnection = async (requestId, action, notificationId) => {
+    setResponding((prev) => ({ ...prev, [notificationId]: true }));
+    try {
+      await api.respondConnection(requestId, action);
+      toast.success(`Request ${action === "accept" ? "accepted" : "rejected"} successfully!`);
+      await markRead(notificationId);
+      await load();
+    } catch (err) {
+      toast.error(err.message || "Failed to respond to connection request");
+    } finally {
+      setResponding((prev) => ({ ...prev, [notificationId]: false }));
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -152,6 +168,26 @@ export default function NotificationCenterPage() {
                       <span>{new Date(item.createdAt).toLocaleString()}</span>
                       {item.amount ? <span>Amount: ₹{item.amount}</span> : null}
                     </div>
+                    {item.category === "connections" && item.requestId && (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          disabled={responding[item.id]}
+                          onClick={() => handleRespondConnection(item.requestId, "accept", item.id)}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-leaf px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-leaf/90 transition-colors disabled:opacity-50"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          Accept
+                        </button>
+                        <button
+                          disabled={responding[item.id]}
+                          onClick={() => handleRespondConnection(item.requestId, "reject", item.id)}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-terracotta px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-terracotta/90 transition-colors disabled:opacity-50"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {!item.read ? (

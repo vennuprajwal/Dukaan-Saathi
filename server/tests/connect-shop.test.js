@@ -9,6 +9,7 @@ process.env.DATA_DIR = tempDir;
 
 const { dbReady, db, createOwnerProfile } = await import("../db.js");
 const { sendConnectionRequest } = await import("../lib/connections.js");
+const { getNotificationsForShop } = await import("../lib/notifications.js");
 
 test("manages business connections cleanly, enforcing duplication and self-connection boundaries", async () => {
   await dbReady;
@@ -61,6 +62,14 @@ test("manages business connections cleanly, enforcing duplication and self-conne
   const inDb = await db.prepare("SELECT * FROM business_connections WHERE id = ?").get(req1.id);
   assert.ok(inDb);
   assert.equal(inDb.status, "pending");
+
+  // Verify that Shop B received a notification with connection request ID
+  const notificationsShopB = getNotificationsForShop(shopB.id);
+  assert.equal(notificationsShopB.length, 1);
+  assert.equal(notificationsShopB[0].title, "New Shop Connection Request");
+  assert.equal(notificationsShopB[0].message, "Shop A wants to connect with your shop.");
+  assert.equal(notificationsShopB[0].category, "connections");
+  assert.equal(notificationsShopB[0].requestId, req1.id);
 
   // Verify that the shops are NOT automatically connected
   const a = Math.min(shopA.id, shopB.id);
