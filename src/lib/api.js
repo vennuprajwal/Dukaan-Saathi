@@ -129,4 +129,6 @@ export const api = {
   // Customer CRUD
   updateCustomer: (id, payload) => request(`/dashboard/customers/${id}`, { method: "PUT", body: payload }),
   deleteCustomer: (id) => request(`/dashboard/customers/${id}`, { method: "DELETE" }),
+  // Inventory
+  addProduct: (payload) => request("/dashboard/products", { method: "POST", body: payload }),
 };

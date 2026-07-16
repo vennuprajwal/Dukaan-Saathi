@@ -443,6 +443,62 @@ dataRouter.post("/reminders/send", async (req, res) => {
   }
 });
 
+/* POST /products — Add a new product to the shop's inventory */
+dataRouter.post("/products", async (req, res) => {
+  const shopId = req.shop.id;
+  const {
+    name, category, stock_qty, unit,
+    purchase_price, selling_price, supplier,
+    expiry_date, batch_number, barcode, low_stock_threshold,
+  } = req.body || {};
+
+  if (!(name || "").trim()) {
+    return res.status(400).json({ error: "Product name is required." });
+  }
+  if (stock_qty === undefined || stock_qty === null || stock_qty === "" || isNaN(Number(stock_qty)) || Number(stock_qty) < 0) {
+    return res.status(400).json({ error: "Valid stock quantity is required." });
+  }
+  if (purchase_price === undefined || isNaN(Number(purchase_price)) || Number(purchase_price) < 0) {
+    return res.status(400).json({ error: "Valid purchase price is required." });
+  }
+  if (selling_price === undefined || isNaN(Number(selling_price)) || Number(selling_price) < 0) {
+    return res.status(400).json({ error: "Valid selling price is required." });
+  }
+
+  const nameNorm = normalize(name.trim());
+
+  try {
+    const result = await db.prepare(
+      `INSERT INTO products
+         (shop_id, name, name_norm, unit, stock_qty,
+          cost_price, sell_price, purchase_price, selling_price,
+          supplier, expiry_date, batch_number, barcode, low_stock_threshold)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      shopId,
+      name.trim(),
+      nameNorm,
+      (unit || "unit").toString().trim() || "unit",
+      Number(stock_qty),
+      Number(purchase_price),
+      Number(selling_price),
+      Number(purchase_price),
+      Number(selling_price),
+      (supplier || "").trim() || null,
+      (expiry_date || "").trim() || null,
+      (batch_number || "").trim() || null,
+      (barcode || "").trim() || null,
+      low_stock_threshold !== undefined ? Number(low_stock_threshold) : 5,
+    );
+
+    const product = await db.prepare("SELECT * FROM products WHERE id = ?").get(result.lastInsertRowid);
+    const inv = await inventory(shopId);
+    res.status(201).json({ ok: true, product, inventory: inv });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* POST /reminders/send-all - Records batch sent reminder logs and optionally updates shop UPI */
 dataRouter.post("/reminders/send-all", async (req, res) => {
   const shopId = req.shop.id;

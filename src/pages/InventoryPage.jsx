@@ -3,9 +3,11 @@ import { useOutletContext } from "react-router-dom";
 import {
   Package, AlertTriangle, Download, QrCode, ScanLine,
   Plus, X, CheckCircle2, ChevronDown, Tag, Layers,
-  IndianRupee, Truck, CalendarDays, Hash, Barcode, Info,
+  IndianRupee, Truck, CalendarDays, Hash, Barcode, Info, Loader2,
 } from "lucide-react";
 import { Card, Empty } from "./DashboardPage";
+import { api } from "../lib/api";
+import { useToast } from "../components/Toast";
 
 /* ── Constants ───────────────────────────────────────────── */
 const CATEGORIES = [
@@ -133,10 +135,12 @@ function inputCls(hasError) {
 }
 
 /* ── Add Product Modal ───────────────────────────────────── */
-function AddProductModal({ onClose }) {
+function AddProductModal({ onClose, onSaved }) {
+  const toast = useToast();
   const [form, setForm]     = useState(EMPTY_FORM);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const set = (field) => (e) => {
     const value = e.target.value;
@@ -147,15 +151,36 @@ function AddProductModal({ onClose }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitted(true);
     const { errors: errs, valid } = validate(form);
     setErrors(errs);
     if (!valid) return;
 
-    // ── Backend integration will go here ──
-    alert("✅ Product validated! Backend connection coming in next step.");
+    setSaving(true);
+    try {
+      await api.addProduct({
+        name:                form.name.trim(),
+        category:            form.category,
+        stock_qty:           Number(form.stock_qty),
+        unit:                form.unit,
+        purchase_price:      Number(form.purchase_price),
+        selling_price:       Number(form.selling_price),
+        supplier:            form.supplier.trim() || null,
+        expiry_date:         form.expiry_date || null,
+        batch_number:        form.batch_number.trim() || null,
+        barcode:             form.barcode.trim() || null,
+        low_stock_threshold: Number(form.low_stock_threshold) || 5,
+      });
+      toast.success(`"${form.name.trim()}" added to inventory!`);
+      onSaved();   // refresh inventory list
+      onClose();   // close modal
+    } catch (err) {
+      toast.error(err.message || "Failed to save product. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Profit margin preview
@@ -416,16 +441,19 @@ function AddProductModal({ onClose }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold text-ink/60 hover:bg-black/5 transition-colors"
+                disabled={saving}
+                className="rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold text-ink/60 hover:bg-black/5 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-full bg-shopfront px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95"
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-full bg-shopfront px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:translate-y-0"
               >
-                <Plus className="h-4 w-4" />
-                Save Product
+                {saving
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+                  : <><Plus className="h-4 w-4" /> Save Product</>}
               </button>
             </div>
           </div>
@@ -437,7 +465,7 @@ function AddProductModal({ onClose }) {
 
 /* ── Inventory Page ──────────────────────────────────────── */
 export default function InventoryPage() {
-  const { data, t } = useOutletContext();
+  const { data, load, t } = useOutletContext();
   const [showAddModal, setShowAddModal] = useState(false);
 
   const exportCsv = () => {
@@ -536,7 +564,12 @@ export default function InventoryPage() {
       </Card>
 
       {/* Modal */}
-      {showAddModal && <AddProductModal onClose={() => setShowAddModal(false)} />}
+      {showAddModal && (
+        <AddProductModal
+          onClose={() => setShowAddModal(false)}
+          onSaved={load}
+        />
+      )}
     </div>
   );
 }
