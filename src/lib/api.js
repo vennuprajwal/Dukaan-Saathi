@@ -73,6 +73,7 @@ export const api = {
   addExpense: (amount, category, note) =>
     request("/dashboard/expenses", { method: "POST", body: { amount, category, note } }),
   addSale: (sale) => request("/dashboard/sales", { method: "POST", body: sale }),
+  deleteSale: (id) => request(`/dashboard/sales/${id}`, { method: "DELETE" }),
   setLang: (lang) => request("/dashboard/lang", { method: "POST", body: { lang } }),
   loadDemo: () => request("/dashboard/demo", { method: "POST", body: {} }),
   resetData: () => request("/dashboard/reset", { method: "POST", body: {} }),

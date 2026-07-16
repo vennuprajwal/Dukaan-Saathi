@@ -140,6 +140,27 @@ dataRouter.post("/sales", async (req, res) => {
   res.json({ ok: true, result, summary });
 });
 
+dataRouter.delete("/sales/:id", async (req, res) => {
+  const { id } = req.params;
+  const shopId = req.shop.id;
+  try {
+    const sale = await db.prepare("SELECT * FROM sales WHERE id = ?").get(id);
+    if (!sale) {
+      return res.status(404).json({ error: "Sale not found" });
+    }
+    if (sale.shop_id !== shopId) {
+      return res.status(403).json({ error: "Unauthorized: You do not have permission to delete this sale" });
+    }
+    await db.prepare("DELETE FROM sales WHERE id = ?").run(id);
+    if (sale.product_id) {
+      await db.prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?").run(sale.qty, sale.product_id);
+    }
+    res.json({ ok: true, message: "Sale deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* Seed the current shop with realistic demo data (idempotent — replaces any
    existing data for this shop). */
 dataRouter.post("/demo", async (req, res) => {

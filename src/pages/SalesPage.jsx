@@ -1,18 +1,35 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, Trash2 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { Card, Empty, AddSaleModal } from "./DashboardPage";
 import { api } from "../lib/api";
+import { useToast } from "../components/Toast";
 
 export default function SalesPage() {
   const { data, load, money, timeOf, t, busy, setBusy, setErr } = useOutletContext();
   const [showAddSale, setShowAddSale] = useState(false);
+  const [saleToDelete, setSaleToDelete] = useState(null);
+  const toast = useToast();
 
   const submitSale = async (sale) => {
     await api.addSale(sale);
     setShowAddSale(false);
     load();
+  };
+
+  const handleDeleteSale = async (id) => {
+    setBusy("delete");
+    try {
+      await api.deleteSale(id);
+      toast.success(t("dashboard.saleDeleted") || "Sale deleted successfully!");
+      setSaleToDelete(null);
+      load();
+    } catch (err) {
+      toast.error(err.message || "Failed to delete sale");
+    } finally {
+      setBusy("");
+    }
   };
 
   const exportCsv = async () => {
@@ -67,6 +84,7 @@ export default function SalesPage() {
                   <th className="py-2">{t("dashboard.amount")}</th>
                   <th className="py-2">{t("dashboard.customer")}</th>
                   <th className="py-2 text-right">{t("dashboard.time")}</th>
+                  <th className="py-2 text-right w-10"></th>
                 </tr>
               </thead>
               <tbody>
@@ -85,6 +103,15 @@ export default function SalesPage() {
                       )}
                     </td>
                     <td className="py-2.5 text-right text-xs text-ink/40">{timeOf(row.created_at)}</td>
+                    <td className="py-2.5 text-right">
+                      <button
+                        title="Delete Sale"
+                        onClick={() => setSaleToDelete(row)}
+                        className="text-terracotta/60 hover:text-terracotta transition-colors p-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -104,6 +131,33 @@ export default function SalesPage() {
           />
         )}
       </AnimatePresence>
+
+      {saleToDelete && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => !busy && setSaleToDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-lg font-bold text-shopfront mb-2">Delete Sale</h3>
+            <p className="text-sm text-ink/70 mb-6">Are you sure you want to delete this sale?</p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={busy === "delete"}
+                onClick={() => setSaleToDelete(null)}
+                className="rounded-full bg-paper px-5 py-2 text-sm font-semibold text-ink/70 hover:bg-paper-deep transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy === "delete"}
+                onClick={() => handleDeleteSale(saleToDelete.id)}
+                className="rounded-full bg-terracotta px-5 py-2 text-sm font-semibold text-white hover:bg-terracotta/90 transition-colors disabled:opacity-50"
+              >
+                {busy === "delete" ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
