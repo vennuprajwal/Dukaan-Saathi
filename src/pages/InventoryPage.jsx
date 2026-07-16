@@ -572,24 +572,111 @@ function DeleteConfirmModal({ product, onClose, onDeleted }) {
 }
 
 /* ── Inventory Page ──────────────────────────────────────── */
+/* ── Sort helpers ──────────────────────────────────────────── */
+const SORT_OPTIONS = [
+  { value: "name",           label: "Product Name"   },
+  { value: "stock_qty",      label: "Stock"           },
+  { value: "purchase_price", label: "Purchase Price"  },
+  { value: "selling_price",  label: "Selling Price"   },
+  { value: "expiry_date",    label: "Expiry Date"     },
+];
+
+const STOCK_FILTERS = [
+  { value: "all",      label: "All"       },
+  { value: "in_stock", label: "In Stock"  },
+  { value: "low",      label: "Low Stock" },
+  { value: "out",      label: "Out of Stock" },
+];
+
+function sortProducts(list, field, dir) {
+  return [...list].sort((a, b) => {
+    let va = a[field] ?? "";
+    let vb = b[field] ?? "";
+    if (field === "name") {
+      va = String(va).toLowerCase();
+      vb = String(vb).toLowerCase();
+    } else if (field === "expiry_date") {
+      va = va || "9999-99-99";
+      vb = vb || "9999-99-99";
+    } else {
+      va = Number(va) || 0;
+      vb = Number(vb) || 0;
+    }
+    if (va < vb) return dir === "asc" ? -1 : 1;
+    if (va > vb) return dir === "asc" ?  1 : -1;
+    return 0;
+  });
+}
+
 export default function InventoryPage() {
   const { data, load, t } = useOutletContext();
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingProduct, setEditingProduct]   = useState(null);
+  const [showAddModal,    setShowAddModal]    = useState(false);
+  const [editingProduct,  setEditingProduct]  = useState(null);
   const [deletingProduct, setDeletingProduct] = useState(null);
 
-  const openEdit   = (p) => setEditingProduct(p);
-  const closeEdit  = ()  => setEditingProduct(null);
+  // ── Filter / Search / Sort state ────────────────────────
+  const [search,      setSearch]      = useState("");
+  const [catFilter,   setCatFilter]   = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [sortField,   setSortField]   = useState("name");
+  const [sortDir,     setSortDir]     = useState("asc");
+
+  const openEdit    = (p) => setEditingProduct(p);
+  const closeEdit   = ()  => setEditingProduct(null);
   const openDelete  = (p) => setDeletingProduct(p);
   const closeDelete = ()  => setDeletingProduct(null);
 
-  const exportCsv = () => {
-    alert("Full inventory export coming soon!");
+  const exportCsv = () => alert("Full inventory export coming soon!");
+
+  // ── Derive filtered + sorted list ───────────────────────
+  const allCategories = [...new Set(
+    (data?.inventory || []).map((p) => p.category).filter(Boolean)
+  )].sort();
+
+  const filtered = sortProducts(
+    (data?.inventory || []).filter((p) => {
+      const threshold = Number(p.low_stock_threshold || 5);
+      const qty       = Number(p.stock_qty || 0);
+      const low       = qty <= threshold;
+      const out       = qty === 0;
+
+      // Search
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        const hit = [p.name, p.category, p.supplier, p.barcode, p.batch_number]
+          .filter(Boolean).some((v) => v.toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      // Category
+      if (catFilter !== "all" && (p.category || "") !== catFilter) return false;
+      // Stock status
+      if (stockFilter === "in_stock" && (low || out)) return false;
+      if (stockFilter === "low"      && !low)          return false;
+      if (stockFilter === "out"      && qty !== 0)     return false;
+
+      return true;
+    }),
+    sortField, sortDir
+  );
+
+  const hasFilters = search || catFilter !== "all" || stockFilter !== "all";
+  const clearFilters = () => { setSearch(""); setCatFilter("all"); setStockFilter("all"); };
+
+  const toggleSort = (field) => {
+    if (sortField === field) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return <ChevronsUpDown className="h-3 w-3 opacity-30" />;
+    return sortDir === "asc"
+      ? <ChevronUp className="h-3 w-3 text-shopfront" />
+      : <ChevronDown className="h-3 w-3 text-shopfront" />;
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-shopfront">Inventory</h1>
         <div className="flex items-center gap-2">
@@ -608,19 +695,132 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Inventory Table (unchanged) */}
+      {/* ── Search + Filter + Sort bar ── */}
+      <div className="rounded-2xl bg-white ring-1 ring-black/5 px-4 py-3 space-y-3">
+        {/* Row 1: Search */}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/30" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, category, supplier, barcode…"
+            className="w-full rounded-xl border border-black/10 bg-paper py-2.5 pl-9 pr-4 text-sm text-ink outline-none focus:border-shopfront focus:ring-2 focus:ring-shopfront/20 transition"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/30 hover:text-ink transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Row 2: Filters + Sort + Clear */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Category filter */}
+          <div className="relative">
+            <select
+              value={catFilter}
+              onChange={(e) => setCatFilter(e.target.value)}
+              className={`appearance-none rounded-full border pl-3 pr-7 py-1.5 text-xs font-semibold outline-none transition cursor-pointer
+                ${catFilter !== "all"
+                  ? "border-shopfront/40 bg-shopfront/5 text-shopfront"
+                  : "border-black/10 bg-paper text-ink/60 hover:border-black/20"}`}
+            >
+              <option value="all">All Categories</option>
+              {allCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-ink/40" />
+          </div>
+
+          {/* Stock status filter */}
+          <div className="flex items-center gap-1 rounded-full border border-black/10 bg-paper p-0.5">
+            {STOCK_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setStockFilter(f.value)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all
+                  ${stockFilter === f.value
+                    ? f.value === "low"  ? "bg-terracotta text-white shadow-sm"
+                    : f.value === "out"  ? "bg-ink text-white shadow-sm"
+                    : f.value === "in_stock" ? "bg-leaf text-white shadow-sm"
+                    : "bg-shopfront text-white shadow-sm"
+                    : "text-ink/50 hover:text-ink"}`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort by */}
+          <div className="relative ml-auto">
+            <select
+              value={sortField}
+              onChange={(e) => { setSortField(e.target.value); setSortDir("asc"); }}
+              className="appearance-none rounded-full border border-black/10 bg-paper pl-3 pr-7 py-1.5 text-xs font-semibold text-ink/60 outline-none hover:border-black/20 cursor-pointer transition"
+            >
+              {SORT_OPTIONS.map((s) => <option key={s.value} value={s.value}>Sort: {s.label}</option>)}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-ink/40" />
+          </div>
+          <button
+            onClick={() => setSortDir((d) => d === "asc" ? "desc" : "asc")}
+            title={sortDir === "asc" ? "Ascending" : "Descending"}
+            className="grid h-7 w-7 place-items-center rounded-full border border-black/10 bg-paper text-ink/50 hover:border-black/20 hover:text-ink transition"
+          >
+            {sortDir === "asc" ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </button>
+
+          {/* Result count + Clear */}
+          <span className="text-xs text-ink/40">
+            {filtered.length} / {data?.inventory?.length ?? 0} products
+          </span>
+          {hasFilters && (
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-terracotta hover:underline"
+            >
+              <X className="h-3 w-3" /> Clear filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Inventory Table ── */}
       <Card title={t("dashboard.inventoryStock")} icon={Package}>
-        {data?.inventory?.length ? (
+        {filtered.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="text-xs uppercase tracking-wide text-ink/40">
                 <tr>
-                  <th className="py-2">{t("dashboard.item")}</th>
-                  <th className="py-2 text-right">{t("dashboard.stock")}</th>
-                  <th className="py-2 text-right">Purchase Price</th>
-                  <th className="py-2 text-right">Selling Price</th>
+                  {/* Sortable column headers */}
+                  <th className="py-2">
+                    <button onClick={() => toggleSort("name")} className="inline-flex items-center gap-1 hover:text-shopfront transition-colors">
+                      {t("dashboard.item")} <SortIcon field="name" />
+                    </button>
+                  </th>
+                  <th className="py-2 text-right">
+                    <button onClick={() => toggleSort("stock_qty")} className="inline-flex items-center gap-1 hover:text-shopfront transition-colors">
+                      <SortIcon field="stock_qty" /> {t("dashboard.stock")}
+                    </button>
+                  </th>
+                  <th className="py-2 text-right">
+                    <button onClick={() => toggleSort("purchase_price")} className="inline-flex items-center gap-1 hover:text-shopfront transition-colors">
+                      <SortIcon field="purchase_price" /> Purchase Price
+                    </button>
+                  </th>
+                  <th className="py-2 text-right">
+                    <button onClick={() => toggleSort("selling_price")} className="inline-flex items-center gap-1 hover:text-shopfront transition-colors">
+                      <SortIcon field="selling_price" /> Selling Price
+                    </button>
+                  </th>
                   <th className="py-2">Supplier</th>
-                  <th className="py-2">Expiry</th>
+                  <th className="py-2">
+                    <button onClick={() => toggleSort("expiry_date")} className="inline-flex items-center gap-1 hover:text-shopfront transition-colors">
+                      Expiry <SortIcon field="expiry_date" />
+                    </button>
+                  </th>
                   <th className="py-2">Batch</th>
                   <th className="py-2">Barcode / QR</th>
                   <th className="py-2 text-right">Status</th>
@@ -628,15 +828,20 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {data.inventory.map((p) => {
+                {filtered.map((p) => {
                   const threshold = Number(p.low_stock_threshold || 5);
                   const low = Number(p.stock_qty || 0) <= threshold;
                   return (
-                    <tr key={p.id} className="border-t border-black/5">
+                    <tr key={p.id} className="border-t border-black/5 hover:bg-black/[0.015] transition-colors">
                       <td className="py-2.5 font-medium capitalize text-shopfront">
                         <div className="flex items-center gap-2">
                           {low && <AlertTriangle className="h-4 w-4 text-terracotta" />}
-                          {p.name}
+                          <div>
+                            <div>{p.name}</div>
+                            {p.category && (
+                              <div className="text-[11px] text-ink/40 font-normal">{p.category}</div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className={`py-2.5 text-right font-semibold ${low ? "text-terracotta" : "text-ink/70"}`}>
@@ -668,7 +873,6 @@ export default function InventoryPage() {
                           </span>
                         )}
                       </td>
-                      {/* Edit + Delete actions */}
                       <td className="py-2.5 text-right">
                         <div className="inline-flex items-center gap-1.5">
                           <button
@@ -694,34 +898,29 @@ export default function InventoryPage() {
             </table>
           </div>
         ) : (
-          <Empty>{t("dashboard.noStock")}</Empty>
+          <div className="py-10 text-center space-y-2">
+            <Search className="mx-auto h-8 w-8 text-ink/20" />
+            <p className="text-sm text-ink/40">No products match your filters.</p>
+            {hasFilters && (
+              <button onClick={clearFilters} className="text-xs font-semibold text-shopfront hover:underline">
+                Clear filters
+              </button>
+            )}
+          </div>
         )}
       </Card>
 
       {/* Add Product Modal */}
       {showAddModal && (
-        <AddProductModal
-          onClose={() => setShowAddModal(false)}
-          onSaved={load}
-        />
+        <AddProductModal onClose={() => setShowAddModal(false)} onSaved={load} />
       )}
-
       {/* Edit Product Modal */}
       {editingProduct && (
-        <AddProductModal
-          product={editingProduct}
-          onClose={closeEdit}
-          onSaved={load}
-        />
+        <AddProductModal product={editingProduct} onClose={closeEdit} onSaved={load} />
       )}
-
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
-        <DeleteConfirmModal
-          product={deletingProduct}
-          onClose={closeDelete}
-          onDeleted={load}
-        />
+        <DeleteConfirmModal product={deletingProduct} onClose={closeDelete} onDeleted={load} />
       )}
     </div>
   );

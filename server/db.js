@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS products (
   shop_id             INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
   name                TEXT NOT NULL,
   name_norm           TEXT NOT NULL,
+  category            TEXT,
   unit                TEXT DEFAULT 'unit',
   stock_qty           REAL NOT NULL DEFAULT 0,
   cost_price          REAL NOT NULL DEFAULT 0,
