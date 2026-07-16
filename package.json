@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "server": "npm --prefix server run dev",
-    "dev:all": "concurrently -n web,api -c cyan,magenta \"npm run dev\" \"npm run server\""
+    "dev:all": "concurrently -n web,api -c cyan,magenta \"npm run dev\" \"npm run server\"",
+    "test": "node --test server/tests/**/*.test.js"
   },
   "dependencies": {
     "i18next": "^25.6.0",

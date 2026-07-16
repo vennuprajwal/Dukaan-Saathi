@@ -8,7 +8,7 @@ const tempDir = mkdtempSync(path.join(os.tmpdir(), "dukaan-connect-shop-"));
 process.env.DATA_DIR = tempDir;
 
 const { dbReady, db, createOwnerProfile } = await import("../db.js");
-const { sendConnectionRequest, respondToConnectionRequest } = await import("../lib/connections.js");
+const { sendConnectionRequest, respondToConnectionRequest, createBusinessTransaction } = await import("../lib/connections.js");
 const { getNotificationsForShop } = await import("../lib/notifications.js");
 
 test("manages business connections cleanly, enforcing duplication and self-connection boundaries", async () => {
@@ -117,6 +117,20 @@ test("manages business connections cleanly, enforcing duplication and self-conne
   const acceptNotif = notificationsShopAAccept.find(n => n.title === "Connection Request Accepted");
   assert.ok(acceptNotif);
   assert.equal(acceptNotif.message, "Shop B accepted your connection request.");
+
+  // Test 6: Verify B2B transaction fails before connection
+  await assert.rejects(
+    async () => {
+      // Create a temporary unconnected shop
+      await createBusinessTransaction(shopA.id, 9999, { amount: 100 });
+    },
+    /Please connect with this shop before starting business/
+  );
+
+  // Test 7: Verify B2B transaction succeeds after connection
+  const txn = await createBusinessTransaction(shopA.id, shopB.id, { amount: 200, note: "Test B2B transaction" });
+  assert.ok(txn);
+  assert.equal(txn.amount, 200);
 
   try {
     rmSync(tempDir, { recursive: true, force: true });

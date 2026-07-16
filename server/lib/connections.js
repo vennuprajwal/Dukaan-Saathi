@@ -171,17 +171,17 @@ export async function disconnectShop(shopAId, shopBId) {
   return res1.changes > 0;
 }
 
-export function canPerformBusinessTransaction(fromShopId, toShopId) {
+export async function canPerformBusinessTransaction(fromShopId, toShopId) {
   if (!fromShopId || !toShopId || fromShopId === toShopId) return false;
   const a = Math.min(fromShopId, toShopId);
   const b = Math.max(fromShopId, toShopId);
-  const row = db.prepare(`SELECT 1 FROM connected_shops WHERE shop_a_id = ? AND shop_b_id = ?`).get(a, b);
+  const row = await db.prepare(`SELECT 1 FROM connected_shops WHERE shop_a_id = ? AND shop_b_id = ?`).get(a, b);
   return Boolean(row);
 }
 
 export async function createBusinessTransaction(fromShopId, toShopId, payload = {}) {
-  if (!canPerformBusinessTransaction(fromShopId, toShopId)) {
-    throw new Error('Shops are not connected');
+  if (!(await canPerformBusinessTransaction(fromShopId, toShopId))) {
+    throw new Error("Please connect with this shop before starting business.");
   }
 
   const info = await db.prepare(

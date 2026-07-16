@@ -2,11 +2,19 @@ import { Router } from 'express';
 import { requireAuth } from '../auth.js';
 import { createCreditInvoice, listCreditInvoices, getCreditInvoice, updateCreditInvoice, markInvoicePaid } from '../lib/credit.js';
 import { deleteNotification, getNotificationsForShop, getRecentNotifications, getUnreadNotificationCount, listNotificationsForShop, markNotificationRead } from '../lib/notifications.js';
+import { canPerformBusinessTransaction } from '../lib/connections.js';
 
 export const creditRouter = Router();
 
 creditRouter.post('/invoices', requireAuth, async (req, res) => {
-  const invoice = await createCreditInvoice({ ...req.body, seller_shop_id: req.body.seller_shop_id || req.shop?.id });
+  const buyerId = Number(req.body.buyer_shop_id);
+  const sellerId = Number(req.body.seller_shop_id || req.shop?.id);
+  
+  if (!canPerformBusinessTransaction(buyerId, sellerId)) {
+    return res.status(403).json({ error: "Please connect with this shop before starting business." });
+  }
+
+  const invoice = await createCreditInvoice({ ...req.body, seller_shop_id: sellerId });
   res.json({ invoice });
 });
 
@@ -22,14 +30,26 @@ creditRouter.get('/invoices/:id', requireAuth, async (req, res) => {
 });
 
 creditRouter.put('/invoices/:id', requireAuth, async (req, res) => {
+  const invoice = await getCreditInvoice(Number(req.params.id));
+  if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+
+  if (!canPerformBusinessTransaction(invoice.buyer_shop_id, invoice.seller_shop_id)) {
+    return res.status(403).json({ error: "Please connect with this shop before starting business." });
+  }
+
   const updated = await updateCreditInvoice(Number(req.params.id), req.body);
-  if (!updated) return res.status(404).json({ error: 'Invoice not found' });
   res.json({ invoice: updated });
 });
 
 creditRouter.post('/invoices/:id/pay', requireAuth, async (req, res) => {
+  const invoice = await getCreditInvoice(Number(req.params.id));
+  if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+
+  if (!canPerformBusinessTransaction(invoice.buyer_shop_id, invoice.seller_shop_id)) {
+    return res.status(403).json({ error: "Please connect with this shop before starting business." });
+  }
+
   const updated = await markInvoicePaid(Number(req.params.id), req.body.amount || 0);
-  if (!updated) return res.status(404).json({ error: 'Invoice not found' });
   res.json({ invoice: updated });
 });
 
