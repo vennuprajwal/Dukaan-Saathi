@@ -5,7 +5,7 @@ import {
   Wallet, TrendingUp, ShoppingBag,
   Package, Users,
   Receipt, BarChart3, Star, Plus, Sparkles, Download, X,
-  CalendarClock, BellRing, AlertCircle, CircleDollarSign
+  CalendarClock, BellRing, AlertCircle, CircleDollarSign, Trash2
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, CartesianGrid, Cell,
@@ -44,6 +44,20 @@ export default function DashboardPage() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const resetData = async () => {
+    if (!window.confirm(t("dashboard.resetConfirm", "This will delete all sales, expenses, and inventory data. Are you sure?"))) return;
+    setBusy("reset");
+    setErr("");
+    try {
+      await api.resetData();
+      await load();
     } catch (e) {
       setErr(e.message);
     } finally {

@@ -324,7 +324,7 @@ dataRouter.post("/customers", async (req, res) => {
 
 // Delete a customer
 dataRouter.delete("/customers/:id", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { id } = req.params;
   // Verify customer belongs to shop
   const existing = await db.prepare("SELECT * FROM customers WHERE id = ? AND shop_id = ?").get(id, shopId);
@@ -337,7 +337,7 @@ dataRouter.delete("/customers/:id", async (req, res) => {
 
 // Update a customer
 dataRouter.put("/customers/:id", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { id } = req.params;
   const { name, phone, upi_id, address, notes, due_date } = req.body || {};
   const existing = await db.prepare("SELECT * FROM customers WHERE id = ? AND shop_id = ?").get(id, shopId);

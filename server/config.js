@@ -22,8 +22,8 @@ export const config = {
   // Turso / libSQL. When the URL is unset we fall back to a local SQLite file
   // (see db.js) so local dev needs no cloud account.
   turso: {
-    url: process.env.TURSO_DATABASE_URL || "libsql://dukaan-saathi-praju.aws-ap-south-1.turso.io",
-    authToken: process.env.TURSO_AUTH_TOKEN || "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODQyNjQ4NDYsImlkIjoiMDE5ZjQwZGMtMTEwMS03NWU5LTg3YjItM2M2MTI5YTE0NTAyIiwia2lkIjoiVXY4WkFjQjVjSkRWRmVfSFdpVkVBb19hckx0MWZKYkJQOThvd1l0V3ZxWSIsInJpZCI6IjEyYjhhM2JhLTFkNDEtNDMyYS04NmRmLTNlOWIxZjdmOWEwYiJ9.XmlupphBXBcNG4_3FUyS5rkszA6XatN2qr9xsqBU3nwGVxuUM2_rsVUZS1ck0KOzJ4meM7UqRqC0q7F3QPetDg",
+    url: process.env.TURSO_DATABASE_URL || "",
+    authToken: process.env.TURSO_AUTH_TOKEN || "",
   },
 
   sarvam: {

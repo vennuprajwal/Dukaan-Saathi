@@ -37,6 +37,11 @@ app.get(/^\/(?!api\/).*/, (_req, res) =>
   res.sendFile(join(distDir, "index.html")),
 );
 
+app.use((err, _req, res, _next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: err.message || "Internal server error" });
+});
+
 // Ensure the schema exists before we start accepting requests.
 dbReady
   .then(() => {

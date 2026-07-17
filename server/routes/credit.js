@@ -10,7 +10,7 @@ creditRouter.post('/invoices', requireAuth, async (req, res) => {
   const buyerId = Number(req.body.buyer_shop_id);
   const sellerId = Number(req.body.seller_shop_id || req.activeShopId);
   
-  if (!canPerformBusinessTransaction(buyerId, sellerId)) {
+  if (!await canPerformBusinessTransaction(buyerId, sellerId)) {
     return res.status(403).json({ error: "Please connect with this shop before starting business." });
   }
 
@@ -33,7 +33,7 @@ creditRouter.put('/invoices/:id', requireAuth, async (req, res) => {
   const invoice = await getCreditInvoice(Number(req.params.id));
   if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
 
-  if (!canPerformBusinessTransaction(invoice.buyer_shop_id, invoice.seller_shop_id)) {
+  if (!await canPerformBusinessTransaction(invoice.buyer_shop_id, invoice.seller_shop_id)) {
     return res.status(403).json({ error: "Please connect with this shop before starting business." });
   }
 
@@ -45,7 +45,7 @@ creditRouter.post('/invoices/:id/pay', requireAuth, async (req, res) => {
   const invoice = await getCreditInvoice(Number(req.params.id));
   if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
 
-  if (!canPerformBusinessTransaction(invoice.buyer_shop_id, invoice.seller_shop_id)) {
+  if (!await canPerformBusinessTransaction(invoice.buyer_shop_id, invoice.seller_shop_id)) {
     return res.status(403).json({ error: "Please connect with this shop before starting business." });
   }
 
