@@ -85,7 +85,7 @@ export default function AppLayout() {
           <div className="flex items-center gap-3">
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-shopfront text-sm font-bold text-marigold">दु</div>
             <span className="font-display text-lg font-bold tracking-tight text-shopfront">Dukaan Saathi</span>
-          </Link>
+          </div>
           <ShopSelector />
         </div>
         
@@ -186,9 +186,9 @@ export default function AppLayout() {
                  to={item.path}
                  className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-xl min-w-0 flex-1 ${isActive ? "text-shopfront bg-shopfront/5" : "text-ink/40"}`}
                >
-                 <Icon className={`h-5 w-5 ${isActive ? "text-marigold" : ""}`} />
-                 <span className="text-[10px] font-medium truncate w-full text-center leading-tight">{shortName}</span>
-          </div>
+                  <Icon className={`h-5 w-5 ${isActive ? "text-marigold" : ""}`} />
+                  <span className="text-[10px] font-medium truncate w-full text-center leading-tight">{shortName}</span>
+                </Link>
              );
            })}
         </nav>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Store, Sparkles, ArrowRight } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -29,6 +29,8 @@ export default function LoginPage() {
   const [showMockGoogle, setShowMockGoogle] = useState(false);
   const [mockEmail, setMockEmail] = useState("google.tester@example.com");
   const [mockName, setMockName] = useState("Google Tester");
+
+  const [shopName, setShopName] = useState("");
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -186,6 +188,59 @@ export default function LoginPage() {
     }
   };
 
+  const startDemo = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await api.startDemo();
+      let shops = [res.shop];
+      try {
+        const shopsRes = await api.listShops();
+        if (shopsRes.shops && shopsRes.shops.length > 0) {
+          shops = shopsRes.shops;
+        }
+      } catch (e) {
+        console.warn("Failed to fetch shops:", e);
+      }
+      login(res.token, res.shop, { persist: rememberMe, shops });
+      toast.success(t("auth.login_success", "Welcome to demo!"));
+      navigate("/app");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startCustom = async (e) => {
+    e.preventDefault();
+    if (!shopName.trim()) {
+      setError("Shop name is required");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const res = await api.createShop({ shop_name: shopName.trim() });
+      let shops = [res.shop];
+      try {
+        const shopsRes = await api.listShops();
+        if (shopsRes.shops && shopsRes.shops.length > 0) {
+          shops = shopsRes.shops;
+        }
+      } catch (e) {
+        console.warn("Failed to fetch shops:", e);
+      }
+      login(res.token, res.shop, { persist: rememberMe, shops });
+      toast.success(t("auth.login_success", "Welcome!"));
+      navigate("/app");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-paper px-5 py-10 font-body text-ink">
       <div className="w-full max-w-md">
@@ -222,11 +277,11 @@ export default function LoginPage() {
             <div className="absolute inset-0 -translate-x-full bg-white dark:bg-shopfront/20 transition-transform duration-500 group-hover:translate-x-full" />
           </button>
 
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-black/5"></div>
-                <span className="flex-shrink mx-4 text-xs font-semibold text-ink/40 uppercase">or</span>
-                <div className="flex-grow border-t border-black/5"></div>
-              </div>
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-black/5"></div>
+            <span className="flex-shrink mx-4 text-xs font-semibold text-ink/40 uppercase">or</span>
+            <div className="flex-grow border-t border-black/5"></div>
+          </div>
 
           <form onSubmit={startCustom} className="relative">
             <input
@@ -245,13 +300,11 @@ export default function LoginPage() {
             </button>
           </form>
 
-              <div className="text-center text-sm pt-2">
-                {t("auth.no_account", "Don’t have an account?")} <Link to="/register" className="font-medium text-leaf hover:underline">
-                  {t("auth.register_link", "Register")}
-                </Link>
-              </div>
-            </form>
-          )}
+          <div className="text-center text-sm pt-2">
+            {t("auth.no_account", "Don't have an account?")} <Link to="/register" className="font-medium text-leaf hover:underline">
+              {t("auth.register_link", "Register")}
+            </Link>
+          </div>
           {error && (
             <motion.p
               initial={{ opacity: 0, height: 0 }}

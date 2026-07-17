@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Mic } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
 
 /* Reveal-on-scroll wrapper. Motion already honors prefers-reduced-motion by
    shrinking transforms, and our CSS zeroes durations, so this stays gentle. */
