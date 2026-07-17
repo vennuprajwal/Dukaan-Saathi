@@ -1,9 +1,14 @@
 /* Tiny fetch wrapper. Dev requests go through Vite's proxy to the Express
    backend (see vite.config.js). Attaches the JWT when present. */
 const TOKEN_KEY = "dukaan_token";
+const ACTIVE_SHOP_KEY = "dukaan_active_shop";
 
 // Token helpers support persistent (localStorage) or session-only (sessionStorage)
 export const getToken = () => sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+export const getActiveShopId = () => {
+  const s = sessionStorage.getItem(ACTIVE_SHOP_KEY) || localStorage.getItem(ACTIVE_SHOP_KEY);
+  return s ? Number(s) : null;
+};
 export const setToken = (t, persist = true) => {
   // remove any previous copies
   sessionStorage.removeItem(TOKEN_KEY);
@@ -29,6 +34,11 @@ export const setUnauthorizedCallback = (cb) => {
 async function request(path, { method = "GET", body, auth = true, form } = {}) {
   const headers = {};
   if (auth && getToken()) headers.Authorization = `Bearer ${getToken()}`;
+  
+  // Include active shop ID header for multi-shop support
+  const activeShopId = getActiveShopId();
+  if (activeShopId) headers["x-shop-id"] = String(activeShopId);
+  
   let payload = form;
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
@@ -110,7 +120,13 @@ export const api = {
   getProfile: () => request("/auth/profile"),
   listShops: () => request("/auth/shops"),
   getDirectory: () => request("/auth/directory"),
-  createShop: (payload) => request("/auth/shops", { method: "POST", body: payload }),
+  createShop: (payload) => {
+    // If payload is FormData, send as multipart; otherwise send as JSON
+    if (payload instanceof FormData) {
+      return request("/auth/shops", { method: "POST", form: payload, auth: true });
+    }
+    return request("/auth/shops", { method: "POST", body: payload, auth: true });
+  },
   listCreditInvoices: () => request("/credit/invoices"),
   createCreditInvoice: (payload) => request("/credit/invoices", { method: "POST", body: payload }),
   updateCreditInvoice: (id, payload) => request(`/credit/invoices/${id}`, { method: "PUT", body: payload }),

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, Link, useOutletContext } from "react-router-dom";
-import { Users, Phone, MapPin, Landmark, Info, Edit, Trash2, BookOpen, Printer, Calendar, ArrowUpRight, ArrowDownLeft, X, Send } from "lucide-react";
+import { Phone, MapPin, Landmark, Info, Edit, Trash2, Printer, X, Send } from "lucide-react";
 import { api } from "../lib/api";
 import AutoPayReminderModal from "../components/AutoPayReminderModal";
 
@@ -48,15 +48,7 @@ export default function CustomerDetailsPage() {
   const totalPaid = useMemo(() => payments.reduce((s, p) => s + (p.amount || 0), 0), [payments]);
   const outstanding = totalBillsAmount - totalPaid;
 
-  // Monthly purchases (last 30 days)
-  const monthStart = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d;
-  }, []);
-  const monthlyPurchases = useMemo(() => {
-    return bills.filter(b => new Date(b.created_at) >= monthStart).length;
-  }, [bills, monthStart]);
+
 
   const totalBills = bills.length;
   const lastReminder = reminders.length ? reminders[reminders.length - 1] : null;

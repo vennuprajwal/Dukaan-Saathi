@@ -14,7 +14,7 @@ export const connectionsRouter = Router();
 
 connectionsRouter.post('/request', requireAuth, async (req, res) => {
   const { recipient_shop_id } = req.body || {};
-  const senderShopId = req.shop?.id;
+  const senderShopId = req.activeShopId;
   if (!senderShopId || !recipient_shop_id) {
     return res.status(400).json({ error: 'Sender and recipient shop ids are required' });
   }
@@ -31,13 +31,13 @@ connectionsRouter.post('/request', requireAuth, async (req, res) => {
 });
 
 connectionsRouter.get('/pending', requireAuth, async (req, res) => {
-  const requests = await listPendingRequestsForShop(req.shop?.id);
+  const requests = await listPendingRequestsForShop(req.activeShopId);
   res.json({ requests });
 });
 
 connectionsRouter.post('/respond', requireAuth, async (req, res) => {
   const { request_id, action } = req.body || {};
-  const response = await respondToConnectionRequest(request_id, req.shop?.id, action);
+  const response = await respondToConnectionRequest(request_id, req.activeShopId, action);
   if (!response) {
     return res.status(400).json({ error: 'Unable to update connection request' });
   }
@@ -45,13 +45,13 @@ connectionsRouter.post('/respond', requireAuth, async (req, res) => {
 });
 
 connectionsRouter.get('/connected', requireAuth, async (req, res) => {
-  const connected = await listConnectedShops(req.shop?.id);
+  const connected = await listConnectedShops(req.activeShopId);
   res.json({ connected });
 });
 
 connectionsRouter.post('/disconnect', requireAuth, async (req, res) => {
   const { target_shop_id } = req.body || {};
-  const currentShopId = req.shop?.id;
+  const currentShopId = req.activeShopId;
   if (!currentShopId || !target_shop_id) {
     return res.status(400).json({ error: 'Shop IDs are required' });
   }
@@ -67,7 +67,7 @@ connectionsRouter.post('/disconnect', requireAuth, async (req, res) => {
 connectionsRouter.post('/transaction', requireAuth, async (req, res) => {
   const { target_shop_id, amount, note } = req.body || {};
   try {
-    const txn = await createBusinessTransaction(req.shop?.id, target_shop_id, { amount, note });
+    const txn = await createBusinessTransaction(req.activeShopId, target_shop_id, { amount, note });
     res.json({ transaction: txn });
   } catch (error) {
     res.status(403).json({ error: error.message });

@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { db, createOwnerProfile, createShopForOwner, getOwnerShops, getShopById, getOrCreateShop, normalizePhone, updateOwnerProfile } from "../db.js";
-import { hashPin, verifyPin, issueToken, requireAuth } from "../auth.js";
+import multer from "multer";
+import { db, createOwnerProfile, createShopForOwner, getOwnerShops, getShopById, normalizePhone, updateOwnerProfile } from "../db.js";
+import { hashPin, issueToken, requireAuth } from "../auth.js";
 import bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
 import { config } from "../config.js";
@@ -8,6 +9,19 @@ import { config } from "../config.js";
 export const authRouter = Router();
 
 const cleanNumber = (n) => normalizePhone(n);
+
+// Multer config for shop logo upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"), false);
+    }
+  },
+});
 
 authRouter.post("/register", async (req, res) => {
   const {
@@ -91,7 +105,10 @@ authRouter.post("/register", async (req, res) => {
   });
   const shop = await db.prepare("SELECT * FROM shops WHERE id = ?").get(owner.shop_id);
   const updated = await getShopById(shop.id);
-  return res.json({ token: issueToken(updated), shop: publicShop(updated) });
+  // Get all shops for this owner
+  const allShops = await getOwnerShops(owner.id);
+  const shopIds = allShops.map(s => s.id);
+  return res.json({ token: issueToken(updated, owner.id, shopIds), shop: publicShop(updated) });
 });
 
 authRouter.post("/login", async (req, res) => {
@@ -112,7 +129,10 @@ authRouter.post("/login", async (req, res) => {
   if (!shop) return res.status(401).json({ error: "Shop not found for this user" });
   
   const shopDetails = await getShopById(shop.id);
-  return res.json({ token: issueToken(shopDetails), shop: publicShop(shopDetails) });
+  // Get all shops for this owner
+  const allShops = await getOwnerShops(owner.id);
+  const shopIds = allShops.map(s => s.id);
+  return res.json({ token: issueToken(shopDetails, owner.id, shopIds), shop: publicShop(shopDetails) });
 });
 
 authRouter.post("/google", async (req, res) => {
@@ -146,7 +166,7 @@ authRouter.post("/google", async (req, res) => {
           } else {
             return res.status(401).json({ error: "Invalid Google token (failed both ID and Access Token validation)" });
           }
-        } catch (fetchErr) {
+        } catch {
           return res.status(401).json({ error: "Google token verification failed" });
         }
       }
@@ -196,10 +216,14 @@ authRouter.post("/google", async (req, res) => {
         whatsapp_number: owner.whatsapp_number || owner.mobile_number || "0000000000",
       });
       const shopDetails = await getShopById(newShop.id);
-      return res.json({ token: issueToken(shopDetails), shop: publicShop(shopDetails) });
+      const allShops = await getOwnerShops(owner.id);
+      const shopIds = allShops.map(s => s.id);
+      return res.json({ token: issueToken(shopDetails, owner.id, shopIds), shop: publicShop(shopDetails) });
     }
     const shopDetails = await getShopById(shop.id);
-    return res.json({ token: issueToken(shopDetails), shop: publicShop(shopDetails) });
+    const allShops = await getOwnerShops(owner.id);
+    const shopIds = allShops.map(s => s.id);
+    return res.json({ token: issueToken(shopDetails, owner.id, shopIds), shop: publicShop(shopDetails) });
   }
 
   // 2. New Google User -> Need extra info (Shop Name, Phone Number, Shop Address)
@@ -238,7 +262,9 @@ authRouter.post("/google", async (req, res) => {
 
   const shop = await db.prepare("SELECT * FROM shops WHERE id = ?").get(newOwner.shop_id);
   const shopDetails = await getShopById(shop.id);
-  return res.json({ token: issueToken(shopDetails), shop: publicShop(shopDetails) });
+  const allShops = await getOwnerShops(newOwner.id);
+  const shopIds = allShops.map(s => s.id);
+  return res.json({ token: issueToken(shopDetails, newOwner.id, shopIds), shop: publicShop(shopDetails) });
 });
 
 /* Reset PIN. This is a lightweight demo flow: possession of the phone
@@ -260,7 +286,12 @@ authRouter.post("/reset-pin", async (req, res) => {
   await db.prepare("UPDATE owner_profiles SET pin_hash = ? WHERE id = ?").run(hashPin(pin), owner.id);
   const shop = await db.prepare("SELECT * FROM shops WHERE owner_id = ? AND whatsapp_number = ?").get(owner.id, number) || await db.prepare("SELECT * FROM shops WHERE whatsapp_number = ?").get(number);
   const updated = shop ? await getShopById(shop.id) : null;
-  return updated ? res.json({ token: issueToken(updated), shop: publicShop(updated) }) : res.status(404).json({ error: "No shop registered with this number" });
+  if (updated) {
+    const allShops = await getOwnerShops(owner.id);
+    const shopIds = allShops.map(s => s.id);
+    return res.json({ token: issueToken(updated, owner.id, shopIds), shop: publicShop(updated) });
+  }
+  return res.status(404).json({ error: "No shop registered with this number" });
 });
 
 function publicShop(shop) {
@@ -277,6 +308,9 @@ function publicShop(shop) {
     shop_logo: shop.shop_logo || null,
     business_category: shop.business_category || null,
     lang_pref: shop.lang_pref,
+    address: shop.address || null,
+    upi_id: shop.upi_id || null,
+    gst_number: shop.gst_number || null,
   };
 }
 
@@ -302,11 +336,28 @@ authRouter.get("/directory", requireAuth, async (req, res) => {
   res.json({ shops: shops.map(publicShop) });
 });
 
-authRouter.post("/shops", requireAuth, async (req, res) => {
-  const { whatsapp_number, name, pin, lang } = req.body || {};
+authRouter.post("/shops", requireAuth, upload.single("shop_logo"), async (req, res) => {
+  const { whatsapp_number, name, pin, lang, address, upi_id, gst_number } = req.body || {};
   const number = cleanNumber(whatsapp_number);
   if (!number) return res.status(400).json({ error: "Phone number is required" });
-  const shop = await createShopForOwner(req.shop.owner_id || req.owner?.id, { whatsapp_number: number, name, pin, lang });
+  
+  // Check for duplicate shop (same phone number for this owner)
+  const existingShop = await db.prepare("SELECT * FROM shops WHERE whatsapp_number = ? AND owner_id = ?").get(number, req.shop.owner_id || req.owner?.id);
+  if (existingShop) {
+    return res.status(409).json({ error: "A shop with this phone number already exists" });
+  }
+  
+  const shopLogoFile = req.file;
+  const shop = await createShopForOwner(req.shop.owner_id || req.owner?.id, { 
+    whatsapp_number: number, 
+    name, 
+    pin, 
+    lang,
+    address,
+    upi_id,
+    gst_number,
+    shop_logo: shopLogoFile ? shopLogoFile.buffer : null
+  });
   res.json({ shop: publicShop(shop) });
 });
 
@@ -344,7 +395,9 @@ authRouter.put("/profile", requireAuth, async (req, res) => {
   }
 
   const updated = await updateOwnerProfile(shopId, payload);
-  return res.json({ token: issueToken(updated), shop: publicShop(updated) });
+  const allShops = await getOwnerShops(req.owner.id);
+  const shopIds = allShops.map(s => s.id);
+  return res.json({ token: issueToken(updated, req.owner.id, shopIds), shop: publicShop(updated) });
 });
 
 // Change password endpoint

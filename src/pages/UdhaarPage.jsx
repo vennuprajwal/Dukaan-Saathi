@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Users, Plus, Landmark, QrCode, Copy, Check, X, Send, History, MessageSquare, PhoneCall } from "lucide-react";
+import { Users, Plus, Copy, Check, X, Send, History, MessageSquare, PhoneCall } from "lucide-react";
 import { Card, Empty, AddSaleModal } from "./DashboardPage";
 import { api } from "../lib/api";
 import AutoPayReminderModal from "../components/AutoPayReminderModal";

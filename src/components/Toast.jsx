@@ -23,6 +23,8 @@ export function ToastProvider({ children }) {
   const idRef = useRef(0);
   const seenRef = useRef(new Set());
 
+  const remove = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+
   const show = useCallback(
     (message, { tone = "info", duration = 3500 } = {}) => {
       const id = ++idRef.current;
@@ -30,10 +32,8 @@ export function ToastProvider({ children }) {
       if (duration > 0) setTimeout(() => remove(id), duration);
       return id;
     },
-    [],
+    [remove],
   );
-
-  const remove = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
 
   useEffect(() => {
     const poll = async () => {

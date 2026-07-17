@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Store, ArrowRight, ArrowLeft } from "lucide-react";
+import { Store, ArrowLeft } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -18,13 +18,11 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [shopAddress, setShopAddress] = useState("");
   const [shopLogo, setShopLogo] = useState("");
-  const [businessCategory, setBusinessCategory] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const [googleAuthData, setGoogleAuthData] = useState(null);
   const [googleShopName, setGoogleShopName] = useState("");
@@ -172,8 +170,7 @@ export default function RegisterPage() {
         password: password.trim(),
         lang,
       };
-      const res = await api.register(payload);
-      setSuccess(t("auth.register_success", "Registration successful! Redirecting to login..."));
+      await api.register(payload);
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(err.message);

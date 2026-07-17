@@ -9,7 +9,6 @@ import {
   PhoneShell,
   Bubble,
   VoiceNote,
-  Waveform,
   ResultCard,
   TypingDots,
 } from "./ui";

@@ -118,6 +118,10 @@ export function markNotificationRead(id, shopId) {
   return true;
 }
 
+export function clearNotificationHistory() {
+  notificationHistory = [];
+}
+
 export function deleteNotification(id, shopId) {
   const before = notificationHistory.length;
   notificationHistory = notificationHistory.filter((item) => !(item.id === id && (item.shopId === shopId || item.recipientShopId === shopId)));

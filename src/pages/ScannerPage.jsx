@@ -1,12 +1,11 @@
 import { useState, useRef } from "react";
-import { Scan, Camera, Upload, Edit3, Trash2, Plus, CheckCircle, RefreshCw, AlertCircle, FileText } from "lucide-react";
+import { Scan, Camera, Upload, Trash2, Plus, CheckCircle, RefreshCw, AlertCircle } from "lucide-react";
 import { Card } from "./DashboardPage";
 import { useOutletContext } from "react-router-dom";
 import { api } from "../lib/api";
 
 export default function ScannerPage() {
   const { load } = useOutletContext();
-  const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);

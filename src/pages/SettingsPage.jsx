@@ -7,7 +7,7 @@ import { api } from "../lib/api";
 import { useToast } from "../components/Toast";
 
 export default function SettingsPage() {
-  const { t, load } = useOutletContext();
+  const { load } = useOutletContext();
   const { shop, logout, login } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();

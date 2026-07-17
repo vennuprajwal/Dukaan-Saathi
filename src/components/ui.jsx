@@ -19,7 +19,7 @@ export function Reveal({ children, delay = 0, y = 24, className = "" }) {
         const targetId = section?.id;
         // If event has no id, treat as a global retrigger. Otherwise match by id.
         if (!ev?.detail?.id || ev.detail.id === targetId) setKey((k) => k + 1);
-      } catch (e) {}
+      } catch {}
     };
 
     document.addEventListener("reveal-section", onReveal);

@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, Paperclip, Mic, Square, Check, Info, FileText, ChevronRight, AlertCircle, HelpCircle } from "lucide-react";
+import { Sparkles, Send, Paperclip, Mic, Square, Check, AlertCircle } from "lucide-react";
 import { Card } from "./DashboardPage";
 import { useOutletContext } from "react-router-dom";
 import { useSpeech } from "../hooks/useSpeech";
 import { api } from "../lib/api";
-import { TypingDots, ResultCard, Waveform } from "../components/ui";
+import { TypingDots, ResultCard } from "../components/ui";
 
 const SUGGESTIONS = {
   en: [
@@ -104,7 +104,7 @@ export default function AiPage() {
       
       // Auto reload layout metrics
       await load();
-    } catch (err) {
+    } catch {
       setError("Failed to fetch assistant response.");
       setMessages((prev) => [
         ...prev,
@@ -170,7 +170,7 @@ export default function AiPage() {
         ]);
         await load();
       }
-    } catch (err) {
+    } catch {
       setError("Failed to parse the notebook image.");
       setMessages((prev) => [
         ...prev,

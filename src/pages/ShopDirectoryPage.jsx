@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
 import { Search, Filter, Store, CheckCircle2, Phone, MapPin, User, Sparkles, BadgeCheck } from "lucide-react";
 import { api } from "../lib/api";
 import { useToast } from "../components/Toast";
 
 export default function ShopDirectoryPage() {
-  const { t } = useOutletContext();
+
   const toast = useToast();
   
   const [shops, setShops] = useState([]);

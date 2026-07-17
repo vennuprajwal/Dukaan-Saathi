@@ -4,10 +4,10 @@ import {
   Package, AlertTriangle, Download, QrCode, ScanLine,
   Plus, X, CheckCircle2, ChevronDown, ChevronUp, ChevronsUpDown, Search,
   Tag, Layers,
-  IndianRupee, Truck, CalendarDays, Hash, Barcode, Info, Loader2, Pencil, Save,
+  IndianRupee, Truck, CalendarDays, Hash, Barcode, Info, Loader2, Pencil,
   Trash2, AlertCircle,
 } from "lucide-react";
-import { Card, Empty } from "./DashboardPage";
+import { Card } from "./DashboardPage";
 import { api } from "../lib/api";
 import { useToast } from "../components/Toast";
 

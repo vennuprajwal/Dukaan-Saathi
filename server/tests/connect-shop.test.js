@@ -9,10 +9,16 @@ process.env.DATA_DIR = tempDir;
 
 const { dbReady, db, createOwnerProfile } = await import("../db.js");
 const { sendConnectionRequest, respondToConnectionRequest, createBusinessTransaction } = await import("../lib/connections.js");
-const { getNotificationsForShop } = await import("../lib/notifications.js");
+const { getNotificationsForShop, clearNotificationHistory } = await import("../lib/notifications.js");
 
 test("manages business connections cleanly, enforcing duplication and self-connection boundaries", async () => {
   await dbReady;
+
+  // Clear connection tables and notification history to ensure test isolation
+  await db.prepare("DELETE FROM business_connections").run();
+  await db.prepare("DELETE FROM connected_shops").run();
+  await db.prepare("DELETE FROM notifications").run();
+  clearNotificationHistory();
 
   // Create owner/shop A
   const ownerA = await createOwnerProfile({

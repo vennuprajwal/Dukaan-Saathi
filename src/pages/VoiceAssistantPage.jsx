@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Mic, Square, Sparkles, AlertCircle, Play, History, CheckCircle } from "lucide-react";
 import { Card } from "./DashboardPage";
 import { useOutletContext } from "react-router-dom";
@@ -25,10 +25,10 @@ const MOCK_PROMPTS = {
 };
 
 export default function VoiceAssistantPage() {
-  const { t, data, load } = useOutletContext();
+  const { data, load } = useOutletContext();
   const lang = data?.shop?.lang_pref || "en";
   
-  const { supported: speechSupported, listening, interim, start: startSpeech, stop: stopSpeech } = useSpeech(lang);
+  const { listening, interim, start: startSpeech, stop: stopSpeech } = useSpeech(lang);
   
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");

@@ -1,15 +1,15 @@
 import { useEffect, useState, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { 
-  Users, Search, Receipt, Calendar, Printer, Download, 
-  ChevronRight, Info, Coins, Eye, BookOpen, User, Phone, 
-  MapPin, Landmark, FileText, ArrowLeft, ArrowUpRight, ArrowDownLeft 
+  Search, Printer, Download, 
+  ChevronRight, Info, Eye, BookOpen, Phone, 
+  MapPin, Landmark, ArrowUpRight, ArrowDownLeft 
 } from "lucide-react";
 import { api } from "../lib/api";
 import AutoPayReminderModal from "../components/AutoPayReminderModal";
 
 export default function CustomerLedgerPage() {
-  const { data, money, t } = useOutletContext();
+  const { data, money } = useOutletContext();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

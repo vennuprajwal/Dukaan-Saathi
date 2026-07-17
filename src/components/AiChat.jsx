@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Mic, Send, Paperclip, ChevronDown, CheckCircle2, AlertCircle, Square, Loader2 } from "lucide-react";
+import { Mic, Send, Paperclip, ChevronDown, Square } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { api } from "../lib/api";
-import { TypingDots, Waveform, ResultCard } from "./ui";
+import { TypingDots, ResultCard } from "./ui";
 import { useSpeech } from "../hooks/useSpeech";
 
 const SUGGESTIONS = {
@@ -66,7 +66,7 @@ export default function AiChat({ onUpdateDashboard }) {
         // Trigger dashboard refresh if data might have changed
         if (onUpdateDashboard) onUpdateDashboard();
       }
-    } catch (err) {
+    } catch {
       setMessages((prev) => [...prev, { id: Date.now().toString() + "err", role: "ai", text: "I'm sorry, I couldn't process that right now.", isError: true }]);
     } finally {
       setIsThinking(false);
@@ -105,7 +105,7 @@ export default function AiChat({ onUpdateDashboard }) {
          }]);
          if (onUpdateDashboard) onUpdateDashboard();
       }
-    } catch (err) {
+    } catch {
       setMessages((prev) => [...prev, { id: Date.now().toString() + "err", role: "ai", text: "I couldn't read that image.", isError: true }]);
     } finally {
       setIsThinking(false);

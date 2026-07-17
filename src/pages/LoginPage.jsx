@@ -9,7 +9,7 @@ import { useToast } from "../components/Toast";
 import { motion } from "motion/react";
 
 export default function LoginPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
@@ -80,7 +80,18 @@ export default function LoginPage() {
           name: res.googleUser.name,
         });
       } else {
-        login(res.token, res.shop, { persist: rememberMe });
+        // Fetch all shops for this owner
+        let shops = [res.shop];
+        try {
+          const shopsRes = await api.listShops();
+          if (shopsRes.shops && shopsRes.shops.length > 0) {
+            shops = shopsRes.shops;
+          }
+        } catch (e) {
+          console.warn("Failed to fetch shops:", e);
+        }
+        
+        login(res.token, res.shop, { persist: rememberMe, shops });
         toast.success(t("auth.login_success", "Welcome back!"));
         navigate("/app");
       }
@@ -118,7 +129,19 @@ export default function LoginPage() {
         phone_number: googlePhone.trim(),
         shop_address: googleAddress.trim(),
       });
-      login(res.token, res.shop, { persist: rememberMe });
+      
+      // Fetch all shops for this owner
+      let shops = [res.shop];
+      try {
+        const shopsRes = await api.listShops();
+        if (shopsRes.shops && shopsRes.shops.length > 0) {
+          shops = shopsRes.shops;
+        }
+      } catch (e) {
+        console.warn("Failed to fetch shops:", e);
+      }
+      
+      login(res.token, res.shop, { persist: rememberMe, shops });
       toast.success(t("auth.login_success", "Welcome back!"));
       navigate("/app");
     } catch (err) {
@@ -140,7 +163,19 @@ export default function LoginPage() {
       console.log("[LOGIN] Sending:", { username: username.trim(), password });
       const res = await api.login({ username: username.trim(), password });
       console.log("[LOGIN] Success:", res);
-      login(res.token, res.shop, { persist: rememberMe });
+      
+      // Fetch all shops for this owner
+      let shops = [res.shop];
+      try {
+        const shopsRes = await api.listShops();
+        if (shopsRes.shops && shopsRes.shops.length > 0) {
+          shops = shopsRes.shops;
+        }
+      } catch (e) {
+        console.warn("Failed to fetch shops:", e);
+      }
+      
+      login(res.token, res.shop, { persist: rememberMe, shops });
       toast.success(t("auth.login_success", "Welcome back!"));
       navigate("/app");
     } catch (err) {

@@ -8,7 +8,7 @@ export const creditRouter = Router();
 
 creditRouter.post('/invoices', requireAuth, async (req, res) => {
   const buyerId = Number(req.body.buyer_shop_id);
-  const sellerId = Number(req.body.seller_shop_id || req.shop?.id);
+  const sellerId = Number(req.body.seller_shop_id || req.activeShopId);
   
   if (!canPerformBusinessTransaction(buyerId, sellerId)) {
     return res.status(403).json({ error: "Please connect with this shop before starting business." });
@@ -19,7 +19,7 @@ creditRouter.post('/invoices', requireAuth, async (req, res) => {
 });
 
 creditRouter.get('/invoices', requireAuth, async (req, res) => {
-  const invoices = await listCreditInvoices(req.shop?.id);
+  const invoices = await listCreditInvoices(req.activeShopId);
   res.json({ invoices });
 });
 
@@ -54,7 +54,7 @@ creditRouter.post('/invoices/:id/pay', requireAuth, async (req, res) => {
 });
 
 creditRouter.get('/notifications', requireAuth, async (req, res) => {
-  const notifications = getNotificationsForShop(req.shop?.id);
+  const notifications = getNotificationsForShop(req.activeShopId);
   res.json({ notifications: notifications.slice(-20).reverse() });
 });
 
@@ -64,17 +64,17 @@ creditRouter.get('/notifications/recent', requireAuth, async (_req, res) => {
 
 creditRouter.get('/notifications-center', requireAuth, async (req, res) => {
   const { search = '', category = 'all', page = 1, limit = 8 } = req.query || {};
-  const data = listNotificationsForShop(req.shop?.id, { search, category, page, limit });
-  const unread = getUnreadNotificationCount(req.shop?.id);
+  const data = listNotificationsForShop(req.activeShopId, { search, category, page, limit });
+  const unread = getUnreadNotificationCount(req.activeShopId);
   res.json({ notifications: data.notifications, total: data.total, unread, page: data.page, limit: data.limit, totalPages: data.totalPages });
 });
 
 creditRouter.post('/notifications/:id/read', requireAuth, async (req, res) => {
-  const ok = markNotificationRead(req.params.id, req.shop?.id);
+  const ok = markNotificationRead(req.params.id, req.activeShopId);
   res.json({ ok });
 });
 
 creditRouter.delete('/notifications/:id', requireAuth, async (req, res) => {
-  const ok = deleteNotification(req.params.id, req.shop?.id);
+  const ok = deleteNotification(req.params.id, req.activeShopId);
   res.json({ ok });
 });

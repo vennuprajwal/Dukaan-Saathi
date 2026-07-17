@@ -105,7 +105,6 @@ export async function markInvoicePaid(id, amount = 0) {
   await db.prepare(`UPDATE credit_invoices SET paid_amount = ?, status = ? WHERE id = ?`).run(paidAmount, status, id);
   const updated = await getCreditInvoice(id);
   const buyer = await db.prepare(`SELECT * FROM shops WHERE id = ?`).get(updated.buyer_shop_id);
-  const seller = await db.prepare(`SELECT * FROM shops WHERE id = ?`).get(updated.seller_shop_id);
   publishNotification({
     type: 'payment_received',
     title: 'Payment Received',

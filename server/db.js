@@ -252,7 +252,8 @@ async function applyMigrations() {
     "006-auth-columns.js",
     "007-customer-due-date.js",
     "008-reminder-trigger.js",
-    "009-add-product-category.js"
+    "009-add-product-category.js",
+    "010-add-shop-columns.js"
   ];
   for (const file of migrationFiles) {
     if (applied.has(file)) continue;
@@ -455,7 +456,7 @@ export async function getOrCreateShop(whatsappNumber, name = "My Shop", extra = 
 export async function getShopById(id) {
   return db
     .prepare(
-      `SELECT s.*, o.shop_name, o.owner_name, o.mobile_number, o.email, o.shop_address, o.shop_logo
+      `SELECT s.*, o.shop_name, o.owner_name, o.mobile_number, o.email, o.shop_address, o.shop_logo, o.business_category
        FROM shops s
        LEFT JOIN owner_profiles o ON o.id = s.owner_id
        WHERE s.id = ?`,
@@ -501,12 +502,32 @@ export async function createShopForOwner(ownerId, input = {}) {
   }
 
   const owner = await db.prepare("SELECT * FROM owner_profiles WHERE id = ?").get(ownerId);
+  
+  // Convert shop_logo buffer to base64 data URL if provided
+  let shopLogoData = null;
+  if (input.shop_logo && Buffer.isBuffer(input.shop_logo)) {
+    const base64 = input.shop_logo.toString('base64');
+    shopLogoData = `data:image/png;base64,${base64}`;
+  } else if (typeof input.shop_logo === 'string') {
+    shopLogoData = input.shop_logo;
+  }
+  
   const info = await db
     .prepare(
-      `INSERT INTO shops (owner_id, name, whatsapp_number, pin_hash, lang_pref)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO shops (owner_id, name, whatsapp_number, pin_hash, lang_pref, address, upi_id, gst_number, shop_logo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .run(ownerId, input.name || owner?.shop_name || "My Shop", number, input.pin ? hashPin(input.pin) : null, input.lang || owner?.lang_pref || "en");
+    .run(
+      ownerId, 
+      input.name || owner?.shop_name || "My Shop", 
+      number, 
+      input.pin ? hashPin(input.pin) : null, 
+      input.lang || owner?.lang_pref || "en",
+      input.address || null,
+      input.upi_id || null,
+      input.gst_number || null,
+      shopLogoData
+    );
   return getShopById(info.lastInsertRowid);
 }
 

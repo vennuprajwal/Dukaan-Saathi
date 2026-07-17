@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Target, Award, ArrowUpRight, TrendingUp, AlertTriangle, MessageSquare, Send, CheckCircle, RefreshCw, Sparkles, BookOpen } from "lucide-react";
+import { Target, Award, TrendingUp, AlertTriangle, Send, CheckCircle, RefreshCw, Sparkles, BookOpen } from "lucide-react";
 import { Card } from "./DashboardPage";
 import { useOutletContext } from "react-router-dom";
-import { api } from "../lib/api";
 
 const COACH_RESPONSES = {
   en: {
@@ -62,7 +61,7 @@ const STRATEGIES = {
 };
 
 export default function BusinessCoachPage() {
-  const { data, money, t } = useOutletContext();
+  const { data, money } = useOutletContext();
   const lang = data?.shop?.lang_pref || "en";
   
   const [activeTab, setActiveTab] = useState("inventory");
@@ -89,7 +88,7 @@ export default function BusinessCoachPage() {
     setChatMessages([
       { id: "welcome", role: "coach", text: coachTexts.greeting }
     ]);
-  }, [lang]);
+  }, [coachTexts.greeting]);
 
   const generateReportPlan = () => {
     setGeneratingReport(true);

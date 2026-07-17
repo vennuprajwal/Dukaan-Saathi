@@ -1,13 +1,12 @@
 // src/pages/ShopProfilePage.jsx
 import { useState, useEffect } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { User, Lock, Save, LogOut, Mail, Phone, MapPin, Image as ImageIcon, Briefcase, Globe } from "lucide-react";
 import { Card } from "./DashboardPage";
 import { useAuth } from "../lib/auth-context";
 import { api } from "../lib/api";
 
 export default function ShopProfilePage() {
-  const { t } = useOutletContext();
   const { shop, logout, login } = useAuth();
   const navigate = useNavigate();
 

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Wallet, TrendingUp, ShoppingBag, RefreshCw, LogOut,
-  MessageSquare, Package, Users, AlertTriangle,
-  Receipt, BarChart3, Star, Plus, Sparkles, Download, Trash2, X,
+  Wallet, TrendingUp, ShoppingBag,
+  Package, Users,
+  Receipt, BarChart3, Star, Plus, Sparkles, Download, X,
   CalendarClock, BellRing, AlertCircle, CircleDollarSign
 } from "lucide-react";
 import {
@@ -15,45 +15,14 @@ import MorningBrief from "../components/MorningBrief";
 import CustomerSearchSelector from "../components/CustomerSearchSelector";
 
 export default function DashboardPage() {
-  const { data, load, money, timeOf, t, err, loading, busy, setBusy, setErr } = useOutletContext();
+  const { data, load, money, t, err, loading, busy, setBusy, setErr } = useOutletContext();
   const [showAddSale, setShowAddSale] = useState(false);
-
-  const collect = async (c) => {
-    const input = window.prompt(t("dashboard.collectPrompt", { name: c.name }), String(c.outstanding));
-    const amount = Number(input);
-    if (!amount || amount <= 0) return;
-    await api.collect(c.id, amount);
-    load();
-  };
-
-  const addExpense = async () => {
-    const category = window.prompt(t("dashboard.expenseCatPrompt"));
-    if (!category) return;
-    const amount = Number(window.prompt(t("dashboard.expenseAmtPrompt", { category })));
-    if (!amount || amount <= 0) return;
-    await api.addExpense(amount, category.trim());
-    load();
-  };
 
   const loadDemo = async () => {
     setBusy("demo");
     setErr("");
     try {
       await api.loadDemo();
-      await load();
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setBusy("");
-    }
-  };
-
-  const resetData = async () => {
-    if (!window.confirm(t("dashboard.resetConfirm") || "Clear all data for this shop?")) return;
-    setBusy("reset");
-    setErr("");
-    try {
-      await api.resetData();
       await load();
     } catch (e) {
       setErr(e.message);
@@ -102,7 +71,7 @@ export default function DashboardPage() {
         {err && <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mb-4 rounded-lg bg-terracotta/10 px-3 py-2 text-sm text-terracotta">{err}</motion.p>}
       </AnimatePresence>
 
-      <MorningBrief data={data} t={t} money={money} />
+      <MorningBrief data={data} money={money} />
 
       {/* action toolbar */}
         <div className="mb-5 flex flex-wrap items-center gap-2">

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { BarChart3, FileDown, FileSpreadsheet, FileText, Receipt, ShoppingBag, Star, TrendingUp, Wallet, Package, CircleDollarSign, BellRing } from "lucide-react";
+import { BarChart3, FileDown, FileSpreadsheet, FileText, Receipt, ShoppingBag, Star, TrendingUp, Wallet, Package, CircleDollarSign } from "lucide-react";
 import { Card, Empty, Stat } from "./DashboardPage";
 
 const REPORTS = [

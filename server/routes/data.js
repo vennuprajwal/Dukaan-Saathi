@@ -21,7 +21,7 @@ export const dataRouter = Router();
 dataRouter.use(requireAuth);
 
 dataRouter.get("/dashboard", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const [summary, sales, inv, duesData, productsSold, itemProfit, bestSeller, expenses, trend, health, overview] =
     await Promise.all([
       todaySummary(shopId),
@@ -66,10 +66,10 @@ dataRouter.post("/expenses", async (req, res) => {
   }
   await db.prepare(
     "INSERT INTO expenses (shop_id, category, note, amount) VALUES (?, ?, ?, ?)",
-  ).run(req.shop.id, (category || "misc").toString().trim() || "misc", note || null, amount);
+  ).run(req.activeShopId, (category || "misc").toString().trim() || "misc", note || null, amount);
   const [expenses, summary] = await Promise.all([
-    todayExpenses(req.shop.id),
-    todaySummary(req.shop.id),
+    todayExpenses(req.activeShopId),
+    todaySummary(req.activeShopId),
   ]);
   res.json({ ok: true, expenses, summary });
 });
@@ -82,7 +82,7 @@ dataRouter.post("/payments", async (req, res) => {
   }
   const customer = await db
     .prepare("SELECT * FROM customers WHERE id = ? AND shop_id = ?")
-    .get(customer_id, req.shop.id);
+    .get(customer_id, req.activeShopId);
   if (!customer) return res.status(404).json({ error: "Customer not found" });
 
   if (upi_id && !customer.upi_id) {
@@ -92,13 +92,13 @@ dataRouter.post("/payments", async (req, res) => {
   await db.prepare(
     "INSERT INTO payments (shop_id, customer_id, amount, payment_method, txn_ref) VALUES (?, ?, ?, ?, ?)",
   ).run(
-    req.shop.id,
+    req.activeShopId,
     customer_id,
     amount,
     (payment_method || "cash").toString().trim(),
     (txn_ref || "").toString().trim() || null
   );
-  res.json({ ok: true, dues: await totalDues(req.shop.id) });
+  res.json({ ok: true, dues: await totalDues(req.activeShopId) });
 });
 
 /* Update the shop's preferred language from the dashboard. */
@@ -107,13 +107,13 @@ dataRouter.post("/lang", async (req, res) => {
   if (!["en", "hi", "te"].includes(lang)) {
     return res.status(400).json({ error: "lang must be en, hi or te" });
   }
-  await db.prepare("UPDATE shops SET lang_pref = ? WHERE id = ?").run(lang, req.shop.id);
+  await db.prepare("UPDATE shops SET lang_pref = ? WHERE id = ?").run(lang, req.activeShopId);
   res.json({ ok: true, lang });
 });
 
 // GET pending reminders
 dataRouter.get("/reminders/pending", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const reminders = await db.prepare(`
     SELECT r.*, c.name as customer_name, c.phone as customer_phone, c.upi_id as customer_upi_id
     FROM reminders r
@@ -126,7 +126,7 @@ dataRouter.get("/reminders/pending", async (req, res) => {
 
 // Mark reminder as sent
 dataRouter.put("/reminders/:id/sent", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { id } = req.params;
   
   await db.prepare(
@@ -161,13 +161,13 @@ dataRouter.post("/sales", async (req, res) => {
     _raw: "dashboard:add-sale",
   };
   const result = await executeIntent(parsed, req.shop);
-  const summary = await todaySummary(req.shop.id);
+  const summary = await todaySummary(req.activeShopId);
   res.json({ ok: true, result, summary });
 });
 
 dataRouter.delete("/sales/:id", async (req, res) => {
   const { id } = req.params;
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   try {
     const sale = await db.prepare("SELECT * FROM sales WHERE id = ?").get(id);
     if (!sale) {
@@ -189,13 +189,13 @@ dataRouter.delete("/sales/:id", async (req, res) => {
 /* Seed the current shop with realistic demo data (idempotent — replaces any
    existing data for this shop). */
 dataRouter.post("/demo", async (req, res) => {
-  const stats = await seedDemoData(req.shop.id);
+  const stats = await seedDemoData(req.activeShopId);
   res.json({ ok: true, seeded: stats });
 });
 
 /* Wipe the current shop's transactional data (keeps the login). */
 dataRouter.post("/reset", async (req, res) => {
-  const shopId = req.shop?.id;
+  const shopId = req.activeShopId;
   if (!shopId) {
     return res.status(401).json({ error: "Unauthorized: Missing shop context" });
   }
@@ -220,7 +220,7 @@ dataRouter.get("/export", async (req, res) => {
        FROM sales s LEFT JOIN customers c ON c.id = s.customer_id
        WHERE s.shop_id = ? ORDER BY s.created_at DESC`,
     )
-    .all(req.shop.id);
+    .all(req.activeShopId);
 
   const esc = (v) => {
     const s = String(v ?? "");
@@ -244,7 +244,7 @@ dataRouter.get("/export", async (req, res) => {
 
 /* Search customers by name or phone */
 dataRouter.get("/customers", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const q = (req.query.q || "").toString().trim();
   let rows;
   if (q) {
@@ -275,7 +275,7 @@ dataRouter.get("/customers", async (req, res) => {
 
 /* Create a new customer */
 dataRouter.post("/customers", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { name, phone, upi_id, address, notes, due_date } = req.body || {};
   if (!(name || "").trim()) {
     return res.status(400).json({ error: "Customer name is required" });
@@ -380,7 +380,7 @@ dataRouter.put("/customers/:id", async (req, res) => {
 
 /* GET /ledger - Returns all customers with aggregated ledger statistics */
 dataRouter.get("/ledger", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   try {
     const rows = await db.prepare(
       `SELECT 
@@ -409,7 +409,7 @@ dataRouter.get("/ledger", async (req, res) => {
 
 /* GET /ledger/:customerId - Returns detailed statement history for a customer */
 dataRouter.get("/ledger/:customerId", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { customerId } = req.params;
   try {
     const customer = await db.prepare(
@@ -446,7 +446,7 @@ dataRouter.get("/ledger/:customerId", async (req, res) => {
 
 /* GET /reminders/history - Returns sent reminder history joined with customer details */
 dataRouter.get("/reminders/history", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   try {
     const rows = await db.prepare(
       `SELECT r.*, c.name AS customer_name, c.phone AS customer_phone, c.due_date AS customer_due_date
@@ -463,7 +463,7 @@ dataRouter.get("/reminders/history", async (req, res) => {
 
 /* POST /reminders/send - Records a sent reminder log and optionally updates shop UPI */
 dataRouter.post("/reminders/send", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { customer_id, message, amount, sent_via, shop_upi_id } = req.body || {};
   if (!customer_id || !message || !(amount >= 0) || !sent_via) {
     return res.status(400).json({ error: "Missing required fields: customer_id, message, amount, sent_via" });
@@ -487,7 +487,7 @@ dataRouter.post("/reminders/send", async (req, res) => {
 
 /* DELETE /products/:id — Remove a product from inventory */
 dataRouter.delete("/products/:id", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { id }  = req.params;
 
   const existing = await db.prepare("SELECT * FROM products WHERE id = ? AND shop_id = ?").get(id, shopId);
@@ -504,7 +504,7 @@ dataRouter.delete("/products/:id", async (req, res) => {
 
 /* PUT /products/:id — Edit an existing product */
 dataRouter.put("/products/:id", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { id } = req.params;
   const {
     name, category, stock_qty, unit,
@@ -568,7 +568,7 @@ dataRouter.put("/products/:id", async (req, res) => {
 
 /* POST /products — Add a new product to the shop's inventory */
 dataRouter.post("/products", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const {
     name, category, stock_qty, unit,
     purchase_price, selling_price, supplier,
@@ -625,7 +625,7 @@ dataRouter.post("/products", async (req, res) => {
 
 /* POST /reminders/send-all - Records batch sent reminder logs and optionally updates shop UPI */
 dataRouter.post("/reminders/send-all", async (req, res) => {
-  const shopId = req.shop.id;
+  const shopId = req.activeShopId;
   const { reminders, shop_upi_id } = req.body || {};
   if (!Array.isArray(reminders)) {
     return res.status(400).json({ error: "reminders must be an array" });

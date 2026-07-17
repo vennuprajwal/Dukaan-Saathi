@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
-import { Sparkles, TrendingUp, Target, Activity } from "lucide-react";
+import { Sparkles, Target } from "lucide-react";
 
-export default function MorningBrief({ data, t, money }) {
+export default function MorningBrief({ data, money }) {
   if (!data?.health) return null;
   const { score, greeting, insight, nextGoal, todaysGoal } = data.health;
   

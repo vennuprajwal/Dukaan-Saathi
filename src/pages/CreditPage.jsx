@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
-import { Plus, ReceiptText, CalendarDays, CheckCircle2, AlertTriangle, FileText, TrendingUp } from "lucide-react";
+import { Plus, ReceiptText, CalendarDays, FileText, TrendingUp } from "lucide-react";
 import { api } from "../lib/api";
 
 export default function CreditPage() {
-  const { t } = useOutletContext();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
